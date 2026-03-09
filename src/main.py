@@ -44,15 +44,19 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
                     self.send_header(key, value)
                 self.end_headers()
                 self.wfile.write(response_data)
-            except Exception as e:
+            except Exception as err:
                 self.send_response(500)
+                self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(f"Error relaying request: {str(e)}".encode('utf-8'))
+                error_response = '{"errcode": 1, "errmsg": "Error relaying request: ' + str(err) + '"}'
+                self.wfile.write(error_response.encode('utf-8'))
         else:
             # Send response
             self.send_response(200)
+            self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(b"Request received and printed")
+            success_response = '{"errcode": 0, "errmsg": "ok"}'
+            self.wfile.write(success_response.encode('utf-8'))
 
 def parse_address(addr: str) -> Tuple[str, int]:
     """Parse address string into host and port"""
