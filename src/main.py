@@ -9,6 +9,9 @@ import urllib.request
 from typing import Tuple
 
 class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
+    url = None
+    verbose = False
+    
     def do_POST(self) -> None:
         # Read request body
         content_length = int(self.headers.get('Content-Length', 0))
@@ -17,7 +20,7 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
         # Get request headers
         request_headers = dict(self.headers)
 
-        if args.verbose:
+        if self.__class__.verbose:
             # Print request headers and body
             print("Request Headers:", file=sys.stderr)
             for key, value in request_headers.items():
@@ -29,11 +32,11 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
                 print(f"Binary data: {len(post_data)} bytes", file=sys.stderr)
                 print(post_data, file=sys.stderr)
 
-        if args.url:
+        if self.__class__.url:
             # Relay request to WEBOT_URL
             try:
                 req = urllib.request.Request(
-                    args.url,
+                    self.__class__.url,
                     data=post_data,
                     headers=request_headers,
                     method='POST'
@@ -79,15 +82,19 @@ def main() -> None:
     parser.add_argument("--url", help="URL to relay requests to")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
 
-    global args
     args = parser.parse_args()
 
     # Parse address
     host, port = parse_address(args.addr)
 
     # Get WEBOT_URL from environment or use argument
-    if not args.url:
-        args.url = os.environ.get("WEBOT_URL")
+    url = args.url
+    if not url:
+        url = os.environ.get("WEBOT_URL")
+    
+    # Set class variables
+    RelayHTTPRequestHandler.url = url
+    RelayHTTPRequestHandler.verbose = args.verbose
     
     # Create and start server
     server = HTTPServer((host, port), RelayHTTPRequestHandler)
