@@ -1,8 +1,12 @@
-import argparse
 import os
+import sys
+
+import argparse
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.request
-from typing import Dict, Optional, Union, Tuple
+
+from typing import Tuple
 
 class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
@@ -15,15 +19,15 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
 
         if args.verbose:
             # Print request headers and body
-            print("Request Headers:")
+            print("Request Headers:", file=sys.stderr)
             for key, value in request_headers.items():
-                print(f"{key}: {value}")
-            print("\nRequest Body:")
+                print(f"{key}: {value}", file=sys.stderr)
+            print("\nRequest Body:", file=sys.stderr)
             try:
-                print(post_data.decode('utf-8'))
+                print(post_data.decode('utf-8'), file=sys.stderr)
             except UnicodeDecodeError:
-                print(f"Binary data: {len(post_data)} bytes")
-                print(post_data)
+                print(f"Binary data: {len(post_data)} bytes", file=sys.stderr)
+                print(post_data, file=sys.stderr)
 
         if args.url:
             # Relay request to WEBOT_URL
@@ -71,7 +75,7 @@ def parse_address(addr: str) -> Tuple[str, int]:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("addr", default=":8000", help="Address to bind to (e.g., :8000 or localhost:8000)")
+    parser.add_argument("addr", nargs='?', default=":8000", help="Address to bind to (e.g., :8000 or localhost:8000)")
     parser.add_argument("--url", help="URL to relay requests to")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
 
@@ -89,12 +93,12 @@ def main() -> None:
     server = HTTPServer((host, port), RelayHTTPRequestHandler)
     
     if args.verbose:
-        print(f"Server running on {host}:{port}")
+        print(f"Server running on {host}:{port}", file=sys.stderr)
 
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nServer stopped.")
+        print("\nServer stopped.", file=sys.stderr)
 
 if __name__ == "__main__":
     main()
