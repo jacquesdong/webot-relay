@@ -5,8 +5,6 @@ import urllib.request
 from typing import Dict, Optional, Union, Tuple
 
 class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
-    webot_url: Optional[str] = None
-    
     def do_POST(self) -> None:
         # Read request body
         content_length = int(self.headers.get('Content-Length', 0))
@@ -14,12 +12,24 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
         
         # Get request headers
         request_headers = dict(self.headers)
-        
-        if self.webot_url:
+
+        if args.verbose:
+            # Print request headers and body
+            print("Request Headers:")
+            for key, value in request_headers.items():
+                print(f"{key}: {value}")
+            print("\nRequest Body:")
+            try:
+                print(post_data.decode('utf-8'))
+            except UnicodeDecodeError:
+                print(f"Binary data: {len(post_data)} bytes")
+                print(post_data)
+
+        if args.url:
             # Relay request to WEBOT_URL
             try:
                 req = urllib.request.Request(
-                    self.webot_url,
+                    args.url,
                     data=post_data,
                     headers=request_headers,
                     method='POST'
@@ -39,16 +49,6 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(f"Error relaying request: {str(e)}".encode('utf-8'))
         else:
-            # Print request headers and body
-            print("Request Headers:")
-            for key, value in request_headers.items():
-                print(f"{key}: {value}")
-            print("\nRequest Body:")
-            try:
-                print(post_data.decode('utf-8'))
-            except UnicodeDecodeError:
-                print(f"Binary data: {len(post_data)} bytes")
-            
             # Send response
             self.send_response(200)
             self.end_headers()
@@ -62,29 +62,31 @@ def parse_address(addr: str) -> Tuple[str, int]:
     else:
         parts = addr.split(':')
         host = parts[0]
-        port = int(parts[1]) if len(parts) > 1 else 8001
+        port = int(parts[1]) if len(parts) > 1 else 8000
     return host, port
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("addr", default=":8001", help="Address to bind to (e.g., :8001 or localhost:8001)")
-    
+    parser.add_argument("addr", default=":8000", help="Address to bind to (e.g., :8000 or localhost:8000)")
+    parser.add_argument("--url", help="URL to relay requests to")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
+
+    global args
     args = parser.parse_args()
-    
-    # Get WEBOT_URL from environment
-    webot_url = os.environ.get("WEBOT_URL", "http://localhost:8002")
-    
-    # Set the webot_url in the handler class
-    RelayHTTPRequestHandler.webot_url = webot_url if webot_url else None
-    
+
     # Parse address
     host, port = parse_address(args.addr)
+
+    # Get WEBOT_URL from environment or use argument
+    if not args.url:
+        args.url = os.environ.get("WEBOT_URL")
     
     # Create and start server
     server = HTTPServer((host, port), RelayHTTPRequestHandler)
-    print(f"Server running on {host}:{port}")
-    print(f"WEBOT_URL: {webot_url}")
     
+    if args.verbose:
+        print(f"Server running on {host}:{port}")
+
     try:
         server.serve_forever()
     except KeyboardInterrupt:
