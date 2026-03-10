@@ -27,6 +27,13 @@ impl JsonResponse {
             errmsg: "Method Not Allowed".to_string(),
         }
     }
+
+    pub fn url_not_configured() -> Self {
+        Self {
+            errcode: 1,
+            errmsg: "URL not configured".to_string(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -52,5 +59,12 @@ mod tests {
         let response = JsonResponse::method_not_allowed();
         assert_eq!(response.errcode, 1);
         assert_eq!(response.errmsg, "Method Not Allowed");
+    }
+
+    #[test]
+    fn test_url_not_configured() {
+        let response = JsonResponse::url_not_configured();
+        assert_eq!(response.errcode, 1);
+        assert_eq!(response.errmsg, "URL not configured");
     }
 }

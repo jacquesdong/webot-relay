@@ -287,8 +287,8 @@ IF url 已配置 THEN
         发送 JSON 错误响应 {"errcode": 1, "errmsg": "<错误信息>"}
     END TRY
 ELSE
-    发送 200 状态码
-    发送 JSON 成功响应 {"errcode": 0, "errmsg": "ok"}
+    发送 404 状态码
+    发送 JSON 成功响应 {"errcode": 1, "errmsg": "URL not configured"}
 END IF
 ```
 

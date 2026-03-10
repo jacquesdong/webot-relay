@@ -50,11 +50,11 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
                 error_response = '{{"errcode": 1, "errmsg": "Error relaying request: {}"}}'.format(str(err))
                 self.wfile.write(error_response.encode('utf-8'))
         else:
-            self.send_response(200)
+            self.send_response(404)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            success_response = '{"errcode": 0, "errmsg": "ok"}'
-            self.wfile.write(success_response.encode('utf-8'))
+            error_response = '{"errcode": 1, "errmsg": "URL not configured"}'
+            self.wfile.write(error_response.encode('utf-8'))
 
 
 def parse_bind_address(bind_addr: str) -> Tuple[str, int]:

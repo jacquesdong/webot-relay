@@ -56,7 +56,7 @@ async fn handle_post(
             }
         },
         None => {
-            Ok(Json(JsonResponse::success()))
+            Err((StatusCode::NOT_FOUND, Json(JsonResponse::url_not_configured())))
         }
     }
 }
