@@ -404,7 +404,7 @@ src/
 
 ## 8. 测试用例
 
-### 8.1 功能测试
+### 8.1 功能测试 (Python)
 
 | 测试场景 | 预期行为 |
 |----------|----------|
@@ -415,13 +415,134 @@ src/
 | `python main.py --bind :8000 -v` | 打印详细日志 |
 | 发送POST请求带JSON body | 正确转发/打印 |
 
-### 8.2 错误场景测试
+### 8.2 功能测试 (Rust)
+
+| 测试场景 | 预期行为 |
+|----------|----------|
+| `cargo run -- --bind :8000` | 启动在8000端口 |
+| `cargo run -- --bind :8080 --url http://example.com` | 转发请求到example.com |
+| `WEBOT_URL=http://test.com cargo run -- --bind :8000` | 使用环境变量的URL |
+| `cargo run -- --bind :8000 -v` | 打印详细日志 |
+| 发送POST请求带JSON body | 正确转发/打印 |
+
+#### Rust 单元测试
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_bind_address() {
+        // 测试空地址
+        let (host, port) = parse_bind_address("");
+        assert_eq!(host, "");
+        assert_eq!(port, 8000);
+
+        // 测试仅端口
+        let (host, port) = parse_bind_address(":8080");
+        assert_eq!(host, "");
+        assert_eq!(port, 8080);
+
+        // 测试主机:端口
+        let (host, port) = parse_bind_address("127.0.0.1:9000");
+        assert_eq!(host, "127.0.0.1");
+        assert_eq!(port, 9000);
+
+        // 测试无效端口回退
+        let (host, port) = parse_bind_address("invalid");
+        assert_eq!(host, "invalid");
+        assert_eq!(port, 8000);
+    }
+
+    #[test]
+    fn test_validate_port() {
+        // 有效端口
+        assert!(validate_port(8080).is_ok());
+
+        // 无效端口: 0
+        assert!(validate_port(0).is_err());
+
+        // 无效端口: 超过65535
+        assert!(validate_port(65536).is_err());
+
+        // 边界值
+        assert!(validate_port(1).is_ok());
+        assert!(validate_port(65535).is_ok());
+    }
+
+    #[test]
+    fn test_json_response_success() {
+        let response = JsonResponse::success();
+        assert_eq!(response.errcode, 0);
+        assert_eq!(response.errmsg, "ok");
+    }
+
+    #[test]
+    fn test_json_response_error() {
+        let response = JsonResponse::error("Connection refused");
+        assert_eq!(response.errcode, 1);
+        assert!(response.errmsg.contains("Connection refused"));
+    }
+}
+```
+
+#### Rust 集成测试
+
+```rust
+// tests/integration_test.rs
+
+use std::process::Command;
+use std::net::TcpStream;
+use std::io::{Write, Read};
+
+#[test]
+fn test_server_starts() {
+    // 启动服务器
+    let mut child = Command::new("cargo")
+        .args(&["run", "--", "--bind", ":18030"])
+        .spawn()
+        .expect("Failed to start server");
+
+    // 等待服务器启动
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
+    // 发送POST请求
+    let mut stream = TcpStream::connect("127.0.0.1:18030").unwrap();
+    stream.write_all(b"POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 13\r\n\r\n{\"test\": \"ok\"}").unwrap();
+
+    // 读取响应
+    let mut response = String::new();
+    stream.read_to_string(&mut response).unwrap();
+
+    // 验证响应
+    assert!(response.contains("200 OK"));
+    assert!(response.contains("errcode"));
+
+    // 清理
+    child.kill().unwrap();
+}
+
+#[test]
+fn test_invalid_port() {
+    let output = Command::new("cargo")
+        .args(&["run", "--", "--bind", ":99999"])
+        .output()
+        .expect("Failed to execute");
+
+    // 应该失败并显示错误信息
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("Port must be between"));
+}
+```
+
+### 8.3 错误场景测试
 
 | 测试场景 | 预期行为 |
 |----------|----------|
 | 目标URL不可达 | 返回500错误 |
 | 发送非POST请求 | 返回405 Method Not Allowed |
-| 无效端口号 (--port 99999) | 程序报错退出 |
+| 无效端口号 (--bind :99999) | 程序报错退出 |
 | 无效绑定地址 | 程序报错退出 |
 
 ---
