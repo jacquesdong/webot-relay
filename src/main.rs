@@ -37,7 +37,6 @@ async fn main() {
     
     if args.verbose {
         eprintln!("Server running on {}:{}", if host.is_empty() { "0.0.0.0" } else { &host }, port);
-        eprintln!("WEBOT_URL: {:?}", url);
     }
     
     let state = Arc::new(AppState {
