@@ -46,8 +46,25 @@ async fn handle_post(
             let response = request.send().await
                 .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, Json(JsonResponse::error(&err.to_string()))))?;
 
+            if state.verbose {
+                eprintln!("Response Status: {}", response.status());
+                eprintln!("Response Headers:");
+                for (key, value) in response.headers() {
+                    eprintln!("{}: {:?}", key, value);
+                }
+            }
+
             let body = response.bytes().await
                 .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, Json(JsonResponse::error(&err.to_string()))))?;
+
+            if state.verbose {
+                eprintln!("\nResponse Body:");
+                if let Ok(body_str) = String::from_utf8(body.to_vec()) {
+                    eprintln!("{}", body_str);
+                } else {
+                    eprintln!("Binary data: {} bytes", body.len());
+                }
+            }
 
             if let Ok(json) = serde_json::from_slice(&body) {
                 Ok(Json(json))

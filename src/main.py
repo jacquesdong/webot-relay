@@ -15,6 +15,7 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         request_headers = dict(self.headers)
 
+        # request logging
         if self.__class__.verbose:
             sys.stderr.write("Request Headers:\n")
             for key, value in request_headers.items():
@@ -37,6 +38,19 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
                 with urllib.request.urlopen(req) as response:
                     response_data = response.read()
                     response_status = response.getcode()
+
+                # response logging
+                if self.__class__.verbose:
+                    sys.stderr.write("Response Status: {}\n".format(response_status))
+                    sys.stderr.write("Response Headers:\n")
+                    for key, value in response.getheaders():
+                        sys.stderr.write("{}: {}\n".format(key, value))
+                    sys.stderr.write("\nResponse Body:\n")
+                    try:
+                        sys.stderr.write(response_data.decode('utf-8'))
+                    except UnicodeDecodeError:
+                        sys.stderr.write("Binary data: {} bytes\n".format(len(response_data)))
+                        sys.stderr.write(str(response_data))
 
                 self.send_response(response_status)
                 for key, value in response.getheaders():
