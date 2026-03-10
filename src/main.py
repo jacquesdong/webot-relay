@@ -1,39 +1,32 @@
 import os
 import sys
-
 import argparse
-
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.request
+from typing import Tuple, Optional
 
-from typing import Tuple
 
 class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
     url = None
     verbose = False
-    
+
     def do_POST(self) -> None:
-        # Read request body
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
-        
-        # Get request headers
         request_headers = dict(self.headers)
 
         if self.__class__.verbose:
-            # Print request headers and body
-            print("Request Headers:", file=sys.stderr)
+            sys.stderr.write("Request Headers:\n")
             for key, value in request_headers.items():
-                print(f"{key}: {value}", file=sys.stderr)
-            print("\nRequest Body:", file=sys.stderr)
+                sys.stderr.write("{}: {}\n".format(key, value))
+            sys.stderr.write("\nRequest Body:\n")
             try:
-                print(post_data.decode('utf-8'), file=sys.stderr)
+                sys.stderr.write(post_data.decode('utf-8'))
             except UnicodeDecodeError:
-                print(f"Binary data: {len(post_data)} bytes", file=sys.stderr)
-                print(post_data, file=sys.stderr)
+                sys.stderr.write("Binary data: {} bytes\n".format(len(post_data)))
+                sys.stderr.write(str(post_data))
 
         if self.__class__.url:
-            # Relay request to WEBOT_URL
             try:
                 req = urllib.request.Request(
                     self.__class__.url,
@@ -44,8 +37,7 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
                 with urllib.request.urlopen(req) as response:
                     response_data = response.read()
                     response_status = response.getcode()
-                
-                # Send response back to client
+
                 self.send_response(response_status)
                 for key, value in response.getheaders():
                     self.send_header(key, value)
@@ -55,18 +47,18 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                error_response = '{"errcode": 1, "errmsg": "Error relaying request: ' + str(err) + '"}'
+                error_response = '{{"errcode": 1, "errmsg": "Error relaying request: {}"}}'.format(str(err))
                 self.wfile.write(error_response.encode('utf-8'))
         else:
-            # Send response
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             success_response = '{"errcode": 0, "errmsg": "ok"}'
             self.wfile.write(success_response.encode('utf-8'))
 
+
 def parse_address(addr: str) -> Tuple[str, int]:
-    """Parse address string into host and port"""
+    """Parse address string into host and port (backward compatibility)"""
     if addr.startswith(':'):
         host = ''
         port = int(addr[1:])
@@ -76,36 +68,62 @@ def parse_address(addr: str) -> Tuple[str, int]:
         port = int(parts[1]) if len(parts) > 1 else 8000
     return host, port
 
+
+def validate_port(port: int) -> None:
+    """Validate port number"""
+    if port < 1 or port > 65535:
+        sys.stderr.write("Error: Port must be between 1 and 65535\n")
+        sys.exit(1)
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("addr", nargs='?', default=":8000", help="Address to bind to (e.g., :8000 or localhost:8000)")
-    parser.add_argument("--url", help="URL to relay requests to")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
+    parser = argparse.ArgumentParser(
+        description='HTTP Relay Server - Forward POST requests to target URL',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+Examples:
+  python main.py                                    # Listen on all interfaces, port 8000
+  python main.py --port 8080                       # Listen on port 8080
+  python main.py --host 127.0.0.1 --port 9000     # Listen on localhost:9000
+  python main.py --url http://example.com          # Forward to example.com
+  python main.py -v --url http://example.com       # Verbose mode with forwarding
+  WEBOT_URL=http://example.com python main.py      # Use environment variable for URL
+        '''
+    )
+    parser.add_argument('--host', default='', help='Host to bind to (default: all interfaces)')
+    parser.add_argument('--port', type=int, default=8000, help='Port to bind to (default: 8000)')
+    parser.add_argument('--url', help='URL to relay requests to')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose logging')
+    parser.add_argument('addr', nargs='?', help='[Deprecated] Address format (use --host/--port instead)')
 
     args = parser.parse_args()
 
-    # Parse address
-    host, port = parse_address(args.addr)
+    if args.addr:
+        sys.stderr.write("Warning: 'addr' positional argument is deprecated. Use --host and --port instead.\n")
+        host, port = parse_address(args.addr)
+        if not args.host:
+            args.host = host
+        if args.port == 8000 or args.port == parse_address(args.addr)[1]:
+            args.port = port
 
-    # Get WEBOT_URL from environment or use argument
+    validate_port(args.port)
+
     url = args.url
     if not url:
-        url = os.environ.get("WEBOT_URL")
-    
-    # Set class variables
+        url = os.environ.get('WEBOT_URL')
+
     RelayHTTPRequestHandler.url = url
     RelayHTTPRequestHandler.verbose = args.verbose
-    
-    # Create and start server
-    server = HTTPServer((host, port), RelayHTTPRequestHandler)
-    
+
+    server = HTTPServer((args.host, args.port), RelayHTTPRequestHandler)
+
     if args.verbose:
-        print(f"Server running on {host}:{port}", file=sys.stderr)
+        sys.stderr.write("Server running on {}:{}\n".format(args.host or '0.0.0.0', args.port))
 
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nServer stopped.", file=sys.stderr)
+        sys.stderr.write("\nServer stopped.\n")
 
 if __name__ == "__main__":
     main()

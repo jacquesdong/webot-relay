@@ -1,4 +1,4 @@
-# Python HTTP Relay Server - Rust重构技术规范
+# Python HTTP Relay Server - 技术规范与Rust重构指南
 
 ## 1. 功能描述
 
@@ -14,6 +14,29 @@
 - 支持详细日志输出模式
 - 返回JSON格式的响应
 
+### 1.3 Python版本要求与兼容性
+
+| 项目 | 要求 |
+|------|------|
+| **最低Python版本** | Python 3.6 |
+| **推荐Python版本** | Python 3.8+ |
+| **依赖标准库** | `http.server`, `urllib.request`, `argparse`, `os`, `sys`, `typing` |
+| **支持操作系统** | Linux, macOS, Windows |
+
+#### Python 3.6 兼容性说明
+
+- ✅ 使用 `typing.Tuple` 类型注解
+- ✅ 使用 `format()` 字符串格式化
+- ✅ 使用 `dict.items()` 遍历字典
+- ✅ 使用 `urllib.request.urlopen`
+- ⚠️ 不支持 f-strings (Python 3.6+ 支持)
+- ⚠️ 不支持 `http.server.HTTPServer` 的某些新特性
+
+#### Python 3.10+ 兼容性说明
+
+- ✅ 完全兼容
+- ⚠️ `http.server` 模块有轻微API变化，但向后兼容
+
 ---
 
 ## 2. 接口定义
@@ -22,9 +45,42 @@
 
 | 参数 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
-| `addr` | 字符串 | 否 | `:8000` | 监听地址，格式为 `:端口` 或 `主机:端口` |
+| `--host` | 字符串 | 否 | `""` (所有网卡) | 监听主机名或IP地址 |
+| `--port` | 整数 | 否 | `8000` | 监听端口号 (1-65535) |
 | `--url` | 字符串 | 否 | - | 转发目标URL |
 | `-v`, `--verbose` | 标志 | 否 | false | 启用详细日志输出 |
+
+#### 使用示例
+
+```bash
+# 基本使用（默认监听所有网卡8000端口）
+python main.py
+
+# 指定主机和端口
+python main.py --host 127.0.0.1 --port 8080
+
+# 简写形式（仍支持）
+python main.py --port 9000
+
+# 转发到目标服务器
+python main.py --host 0.0.0.0 --port 8000 --url http://localhost:8002
+
+# 启用详细日志
+python main.py -v --url http://example.com
+
+# 使用环境变量配置URL
+export WEBOT_URL=http://localhost:8002
+python main.py --port 8000
+```
+
+#### 向后兼容性（旧接口）
+
+| 旧参数 | 新参数等价 | 说明 |
+|--------|-----------|------|
+| `addr=:8000` | `--port 8000` | 端口号提取 |
+| `addr=localhost:8000` | `--host localhost --port 8000` | 主机和端口提取 |
+| `-v` | `--verbose` | 保持不变 |
+| `--url` | `--url` | 保持不变 |
 
 ### 2.2 环境变量
 
