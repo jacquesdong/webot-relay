@@ -45,8 +45,7 @@
 
 | 参数 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
-| `--host` | 字符串 | 否 | `""` (所有网卡) | 监听主机名或IP地址 |
-| `--port` | 整数 | 否 | `8000` | 监听端口号 (1-65535) |
+| `-b`, `--bind` | 字符串 | 否 | `:8000` | 监听地址，格式为 `:端口` 或 `主机:端口` |
 | `--url` | 字符串 | 否 | - | 转发目标URL |
 | `-v`, `--verbose` | 标志 | 否 | false | 启用详细日志输出 |
 
@@ -56,31 +55,22 @@
 # 基本使用（默认监听所有网卡8000端口）
 python main.py
 
-# 指定主机和端口
-python main.py --host 127.0.0.1 --port 8080
+# 指定端口
+python main.py --bind :8080
 
-# 简写形式（仍支持）
-python main.py --port 9000
+# 指定主机和端口
+python main.py --bind 127.0.0.1:9000
 
 # 转发到目标服务器
-python main.py --host 0.0.0.0 --port 8000 --url http://localhost:8002
+python main.py --bind :8000 --url http://localhost:8002
 
 # 启用详细日志
-python main.py -v --url http://example.com
+python main.py --bind :8000 -v --url http://example.com
 
 # 使用环境变量配置URL
 export WEBOT_URL=http://localhost:8002
-python main.py --port 8000
+python main.py --bind :8000
 ```
-
-#### 向后兼容性（旧接口）
-
-| 旧参数 | 新参数等价 | 说明 |
-|--------|-----------|------|
-| `addr=:8000` | `--port 8000` | 端口号提取 |
-| `addr=localhost:8000` | `--host localhost --port 8000` | 主机和端口提取 |
-| `-v` | `--verbose` | 保持不变 |
-| `--url` | `--url` | 保持不变 |
 
 ### 2.2 环境变量
 

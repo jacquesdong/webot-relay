@@ -3,7 +3,7 @@ import sys
 import argparse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.request
-from typing import Tuple, Optional
+from typing import Tuple
 
 
 class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -57,16 +57,24 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(success_response.encode('utf-8'))
 
 
-def parse_address(addr: str) -> Tuple[str, int]:
-    """Parse address string into host and port (backward compatibility)"""
-    if addr.startswith(':'):
-        host = ''
-        port = int(addr[1:])
-    else:
-        parts = addr.split(':')
+def parse_bind_address(bind_addr: str) -> Tuple[str, int]:
+    """Parse bind address string into host and port"""
+    if not bind_addr:
+        return '', 8000
+
+    if bind_addr.startswith(':'):
+        return '', int(bind_addr[1:])
+
+    parts = bind_addr.rsplit(':', 1)
+    if len(parts) == 2:
         host = parts[0]
-        port = int(parts[1]) if len(parts) > 1 else 8000
-    return host, port
+        try:
+            port = int(parts[1])
+            return host, port
+        except ValueError:
+            return bind_addr, 8000
+
+    return bind_addr, 8000
 
 
 def validate_port(port: int) -> None:
@@ -83,30 +91,21 @@ def main() -> None:
         epilog='''
 Examples:
   python main.py                                    # Listen on all interfaces, port 8000
-  python main.py --port 8080                       # Listen on port 8080
-  python main.py --host 127.0.0.1 --port 9000     # Listen on localhost:9000
-  python main.py --url http://example.com          # Forward to example.com
-  python main.py -v --url http://example.com       # Verbose mode with forwarding
-  WEBOT_URL=http://example.com python main.py      # Use environment variable for URL
+  python main.py --bind :8080                      # Listen on port 8080
+  python main.py --bind 127.0.0.1:9000            # Listen on localhost:9000
+  python main.py --bind :8000 --url http://example.com
+  python main.py --bind :8000 -v                   # Verbose mode
+  WEBOT_URL=http://example.com python main.py --bind :8000
         '''
     )
-    parser.add_argument('--host', default='', help='Host to bind to (default: all interfaces)')
-    parser.add_argument('--port', type=int, default=8000, help='Port to bind to (default: 8000)')
+    parser.add_argument('-b', '--bind', default=':8000', help='Address to bind to (e.g., :8000 or localhost:8000)')
     parser.add_argument('--url', help='URL to relay requests to')
     parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose logging')
-    parser.add_argument('addr', nargs='?', help='[Deprecated] Address format (use --host/--port instead)')
 
     args = parser.parse_args()
 
-    if args.addr:
-        sys.stderr.write("Warning: 'addr' positional argument is deprecated. Use --host and --port instead.\n")
-        host, port = parse_address(args.addr)
-        if not args.host:
-            args.host = host
-        if args.port == 8000 or args.port == parse_address(args.addr)[1]:
-            args.port = port
-
-    validate_port(args.port)
+    host, port = parse_bind_address(args.bind)
+    validate_port(port)
 
     url = args.url
     if not url:
@@ -115,10 +114,10 @@ Examples:
     RelayHTTPRequestHandler.url = url
     RelayHTTPRequestHandler.verbose = args.verbose
 
-    server = HTTPServer((args.host, args.port), RelayHTTPRequestHandler)
+    server = HTTPServer((host, port), RelayHTTPRequestHandler)
 
     if args.verbose:
-        sys.stderr.write("Server running on {}:{}\n".format(args.host or '0.0.0.0', args.port))
+        sys.stderr.write("Server running on {}:{}\n".format(host or '0.0.0.0', port))
 
     try:
         server.serve_forever()
