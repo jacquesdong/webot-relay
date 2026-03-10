@@ -106,6 +106,27 @@ python main.py --bind :8000
 }
 ```
 
+#### 错误码定义
+
+| errcode | 说明 |
+|---------|------|
+| 0 | 成功 |
+| 1 | 转发请求失败 |
+| 2 | 无效端口号 |
+| 3 | 无效绑定地址 |
+| 405 | 请求方法不允许 |
+
+#### 非POST请求处理
+
+对于非POST的HTTP请求，返回:
+```json
+{
+  "errcode": 405,
+  "errmsg": "Method Not Allowed"
+}
+```
+状态码: 405
+
 ---
 
 ## 3. 数据结构
@@ -114,9 +135,9 @@ python main.py --bind :8000
 
 ```rust
 struct Config {
-    addr: String,      // 监听地址
-    url: Option<String>, // 转发目标URL
-    verbose: bool,     // 详细日志模式
+    bind: String,           // 绑定地址 (e.g., ":8000" or "localhost:8000")
+    url: Option<String>,    // 转发目标URL
+    verbose: bool,          // 详细日志模式
 }
 ```
 
@@ -213,24 +234,30 @@ struct JsonResponse {
 ### 4.2 地址解析算法
 
 ```
-parse_address(addr: &str) -> (String, u16)
+parse_bind_address(bind_addr: &str) -> (String, u16)
 
 输入: ":8000" 或 "localhost:8000" 或 "0.0.0.0:8000"
 
-IF addr 以 ':' 开头 THEN
-    host = ""
-    port = addr[1:].parse::<u16>()
-ELSE
-    parts = addr.split(':')
-    host = parts[0]
-    IF parts.len() > 1 THEN
-        port = parts[1].parse::<u16>()
-    ELSE
-        port = 8000
-    END IF
+IF bind_addr 为空 THEN
+    RETURN ("", 8000)
 END IF
 
-RETURN (host, port)
+IF bind_addr 以 ':' 开头 THEN
+    RETURN ("", bind_addr[1:].parse::<u16>())
+END IF
+
+parts = bind_addr.rsplit(':', 1)
+IF parts.len() == 2 THEN
+    host = parts[0]
+    TRY
+        port = parts[1].parse::<u16>()
+        RETURN (host, port)
+    CATCH
+        RETURN (bind_addr, 8000)
+    END TRY
+END IF
+
+RETURN (bind_addr, 8000)
 ```
 
 ### 4.3 请求处理算法
@@ -382,10 +409,11 @@ src/
 
 | 测试场景 | 预期行为 |
 |----------|----------|
-| `python main.py :8000` (无URL) | 启动在8000端口，返回成功响应 |
-| `python main.py :8080 --url http://example.com` | 转发请求到example.com |
+| `python main.py` (无参数) | 启动在8000端口，返回成功响应 |
+| `python main.py --bind :8000` | 启动在8000端口 |
+| `python main.py --bind :8080 --url http://example.com` | 转发请求到example.com |
 | `WEBOT_URL=http://test.com python main.py` | 使用环境变量的URL |
-| `python main.py -v :8000` | 打印详细日志 |
+| `python main.py --bind :8000 -v` | 打印详细日志 |
 | 发送POST请求带JSON body | 正确转发/打印 |
 
 ### 8.2 错误场景测试
@@ -394,7 +422,8 @@ src/
 |----------|----------|
 | 目标URL不可达 | 返回500错误 |
 | 发送非POST请求 | 返回405 Method Not Allowed |
-| 无效端口号 | 程序报错退出 |
+| 无效端口号 (--port 99999) | 程序报错退出 |
+| 无效绑定地址 | 程序报错退出 |
 
 ---
 
