@@ -27,7 +27,7 @@ pub fn parse_bind_address(bind_addr: &str) -> Result<(String, u16), String> {
 }
 
 pub fn validate_port(port: u16) -> Result<(), String> {
-    if port < 1 || port > 65535 {
+    if port < 1 {
         return Err("Port must be between 1 and 65535".to_string());
     }
     Ok(())
@@ -82,6 +82,5 @@ mod tests {
     #[test]
     fn test_validate_port_invalid() {
         assert!(validate_port(0).is_err());
-        assert!(validate_port(65536).is_err());
     }
 }
