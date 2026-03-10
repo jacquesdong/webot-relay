@@ -2,7 +2,12 @@
 
 # 解析命令行参数，忽略未知选项
 HEAD="Content-Type: application/json"
-DATA='{"msgtype": "text", "text": {"content": "hello world"}}'
+DATA='{
+  "msgtype": "text",
+  "text": {
+    "content": "hello world"
+  }
+}'
 
 # 存储非选项参数（URL 和其他选项）
 other_args=()
