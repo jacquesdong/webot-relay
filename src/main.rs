@@ -35,10 +35,6 @@ async fn main() {
     
     let url = args.get_url();
     
-    if args.verbose {
-        eprintln!("Server running on {}:{}", if host.is_empty() { "0.0.0.0" } else { &host }, port);
-    }
-    
     let state = Arc::new(AppState {
         url,
         verbose: args.verbose,
@@ -52,7 +48,7 @@ async fn main() {
             std::process::exit(1);
         });
     
-    eprintln!("Server listening on {:?}", socket_addr);
+    eprintln!("Server running on {:?}", socket_addr);
     
     axum::serve(listener, app).await
         .unwrap_or_else(|err| {
