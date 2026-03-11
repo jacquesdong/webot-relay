@@ -13,7 +13,7 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
     def send_response(self, code, message=None):
         self.log_request(code)
         self.send_response_only(code, message)
-    
+
     def do_POST(self) -> None:
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
@@ -21,15 +21,18 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
 
         # request logging
         if self.__class__.verbose:
-            sys.stderr.write("Request Headers:\n")
+            sys.stderr.write(">>> Request Headers:\n")
             for key, value in request_headers.items():
                 sys.stderr.write("{}: {}\n".format(key, value))
-            sys.stderr.write("\nRequest Body:\n")
+            sys.stderr.write("\n")
+            sys.stderr.write(">>> Request Body:\n")
             try:
                 sys.stderr.write(post_data.decode('utf-8'))
+                sys.stderr.write("\n")
             except UnicodeDecodeError:
                 sys.stderr.write("Binary data: {} bytes\n".format(len(post_data)))
                 sys.stderr.write(str(post_data))
+                sys.stderr.write("\n")
 
         if self.__class__.url:
             try:
@@ -42,22 +45,26 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
                     headers=request_headers,
                     method='POST'
                 )
+
                 with urllib.request.urlopen(req) as response:
                     response_data = response.read()
                     response_status = response.getcode()
 
                 # response logging
                 if self.__class__.verbose:
-                    sys.stderr.write("Response Status: {}\n".format(response_status))
-                    sys.stderr.write("Response Headers:\n")
+                    sys.stderr.write("<<< {}\n".format(response_status))
+                    sys.stderr.write("<<< Response Headers:\n")
                     for key, value in response.getheaders():
                         sys.stderr.write("{}: {}\n".format(key, value))
-                    sys.stderr.write("\nResponse Body:\n")
+                    sys.stderr.write("\n")
+                    sys.stderr.write("<<< Response Body:\n")
                     try:
                         sys.stderr.write(response_data.decode('utf-8'))
+                        sys.stderr.write("\n")
                     except UnicodeDecodeError:
                         sys.stderr.write("Binary data: {} bytes\n".format(len(response_data)))
                         sys.stderr.write(str(response_data))
+                        sys.stderr.write("\n")
 
                 self.send_response(response_status)
                 for key, value in response.getheaders():
@@ -65,20 +72,24 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(response_data)
             except Exception as err:
+                error_response = '{{"errcode": 1, "errmsg": "Error relaying request: {}"}}'.format(str(err))
+                sys.stderr.write("*** {}\n".format(error_response))
+
                 self.send_response(500)
                 self.send_header('Server', 'webot-relay')
                 self.send_header('Date', self.date_time_string())
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                error_response = '{{"errcode": 1, "errmsg": "Error relaying request: {}"}}'.format(str(err))
                 self.wfile.write(error_response.encode('utf-8'))
         else:
+            error_response = '{"errcode": 1, "errmsg": "URL not configured"}'
+            sys.stderr.write("*** {}\n".format(error_response))
+
             self.send_response(200)
             self.send_header('Server', 'webot-relay')
             self.send_header('Date', self.date_time_string())
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            error_response = '{"errcode": 1, "errmsg": "URL not configured"}'
             self.wfile.write(error_response.encode('utf-8'))
 
 
