@@ -78,22 +78,22 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
 
 def parse_bind_address(bind_addr: str) -> Tuple[str, int]:
     """Parse bind address string into host and port"""
+    default_port = 8000
     if not bind_addr:
-        return '', 8000
+        return '', default_port
 
-    if bind_addr.startswith(':'):
-        return '', int(bind_addr[1:])
-
-    parts = bind_addr.rsplit(':', 1)
-    if len(parts) == 2:
-        host = parts[0]
+    if ':' in bind_addr:
+        parts = bind_addr.rsplit(':', 1)
+        if len(parts) == 2:
+            return parts[0], int(parts[1])
+        else:
+            return '', default_port
+    else:
         try:
-            port = int(parts[1])
-            return host, port
+            port = int(bind_addr)
+            return '', port
         except ValueError:
-            return bind_addr, 8000
-
-    return bind_addr, 8000
+            return bind_addr, default_port
 
 
 def validate_port(port: int) -> None:
