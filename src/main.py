@@ -10,6 +10,10 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
     url = None
     verbose = False
 
+    def send_response(self, code, message=None):
+        self.log_request(code)
+        self.send_response_only(code, message)
+    
     def do_POST(self) -> None:
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
@@ -63,6 +67,7 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
             except Exception as err:
                 self.send_response(500)
                 self.send_header('Server', 'webot-relay')
+                self.send_header('Date', self.date_time_string())
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 error_response = '{{"errcode": 1, "errmsg": "Error relaying request: {}"}}'.format(str(err))
@@ -70,6 +75,7 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(200)
             self.send_header('Server', 'webot-relay')
+            self.send_header('Date', self.date_time_string())
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             error_response = '{"errcode": 1, "errmsg": "URL not configured"}'
