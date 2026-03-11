@@ -142,7 +142,11 @@ Examples:
     server = HTTPServer((host, port), RelayHTTPRequestHandler)
 
     if args.verbose:
-        sys.stderr.write("Server running on {}:{}\n".format(host or '0.0.0.0', port))
+        sys.stderr.write("Server running on {}:{}".format(host or '0.0.0.0', port))
+        if url:
+            sys.stderr.write(" [relay]\n".format(url))
+        else:
+            sys.stderr.write(" [dumb]\n")
 
     try:
         server.serve_forever()
