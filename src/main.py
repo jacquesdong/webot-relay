@@ -29,6 +29,9 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
 
         if self.__class__.url:
             try:
+                if 'Host' in request_headers:
+                    del request_headers['Host']
+
                 req = urllib.request.Request(
                     self.__class__.url,
                     data=post_data,
