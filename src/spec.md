@@ -56,19 +56,20 @@
 python main.py
 
 # 指定端口
+python main.py --bind 8080
 python main.py --bind :8080
 
 # 指定主机和端口
 python main.py --bind 127.0.0.1:9000
 
 # 转发到目标服务器
-python main.py --bind :8000 --url http://localhost:8002
+python main.py --bind :8000 --url http://localhost:8001
 
 # 启用详细日志
 python main.py --bind :8000 -v --url http://example.com
 
 # 使用环境变量配置URL
-export WEBOT_URL=http://localhost:8002
+export WEBOT_URL=http://localhost:8001
 python main.py --bind :8000
 ```
 
