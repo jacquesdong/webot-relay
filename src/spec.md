@@ -293,14 +293,14 @@ IF url 已配置 THEN
         记录错误信息（格式：*** 错误信息）
         发送 500 状态码
         发送响应头 Server: webot-relay
-        发送 JSON 错误响应 {"errcode": 1, "errmsg": "<错误信息>"}
+        发送响应头 Date: <当前时间>
         发送 JSON 错误响应 {"errcode": 1, "errmsg": "Error relaying request: <错误信息>"}
     END TRY
 ELSE
     记录错误信息（格式：*** 错误信息）
     发送 200 状态码
     发送响应头 Server: webot-relay
-    发送 JSON 成功响应 {"errcode": 1, "errmsg": "URL not configured"}
+    发送响应头 Date: <当前时间>
     发送 JSON 错误响应 {"errcode": 1, "errmsg": "URL not configured"}
 END IF
 
