@@ -16,6 +16,7 @@ use serde_json;
 use std::sync::Arc;
 
 const SERVER_NAME: &str = "webot-relay";
+const CONTENT_TYPE: &str = "application/json";
 
 pub struct AppState {
     pub url: Option<String>,
@@ -79,7 +80,7 @@ async fn handle_post(
                 );
                 response.headers_mut().insert(
                     header::CONTENT_TYPE,
-                    axum::http::HeaderValue::from_static("application/json"),
+                    axum::http::HeaderValue::from_static(CONTENT_TYPE),
                 );
                 (StatusCode::INTERNAL_SERVER_ERROR, response)
             })?;
@@ -112,7 +113,7 @@ async fn handle_post(
                 );
                 response.headers_mut().insert(
                     header::CONTENT_TYPE,
-                    axum::http::HeaderValue::from_static("application/json"),
+                    axum::http::HeaderValue::from_static(CONTENT_TYPE),
                 );
                 (StatusCode::INTERNAL_SERVER_ERROR, response)
             })?;
@@ -133,7 +134,7 @@ async fn handle_post(
                 *response.status_mut() = StatusCode::OK;
                 response.headers_mut().insert(
                     header::CONTENT_TYPE,
-                    axum::http::HeaderValue::from_static("application/json"),
+                    axum::http::HeaderValue::from_static(CONTENT_TYPE),
                 );
                 Ok(response)
             } else {
@@ -142,7 +143,7 @@ async fn handle_post(
                 *response.status_mut() = StatusCode::OK;
                 response.headers_mut().insert(
                     header::CONTENT_TYPE,
-                    axum::http::HeaderValue::from_static("application/json"),
+                    axum::http::HeaderValue::from_static(CONTENT_TYPE),
                 );
                 Ok(response)
             }
@@ -167,7 +168,7 @@ async fn handle_post(
             );
             response.headers_mut().insert(
                 header::CONTENT_TYPE,
-                axum::http::HeaderValue::from_static("application/json"),
+                axum::http::HeaderValue::from_static(CONTENT_TYPE),
             );
             Err((StatusCode::OK, response))
         }
@@ -184,7 +185,7 @@ async fn handle_method_not_allowed() -> Response {
     );
     response.headers_mut().insert(
         header::CONTENT_TYPE,
-        axum::http::HeaderValue::from_static("application/json"),
+        axum::http::HeaderValue::from_static(CONTENT_TYPE),
     );
     response
 }
