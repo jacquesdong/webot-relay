@@ -15,15 +15,17 @@ async fn handle_post(
     body: Bytes,
 ) -> Result<Response, (StatusCode, Response)> {
     if state.verbose {
-        eprintln!("Request Headers:");
+        eprintln!(">>> Request Headers:");
         for (key, value) in &headers {
             eprintln!("{}: {:?}", key, value);
         }
-        eprintln!("\nRequest Body:");
+        eprintln!("");
+        eprintln!(">>> Request Body:");
         if let Ok(body_str) = String::from_utf8(body.to_vec()) {
             eprintln!("{}", body_str);
         } else {
             eprintln!("Binary data: {} bytes", body.len());
+            eprintln!("{:?}", body);
         }
     }
 
@@ -37,8 +39,8 @@ async fn handle_post(
             // 透传请求头
             for (key, value) in headers {
                 if let Some(key) = key {
-                    if let Ok(value_str) = value.to_str() {
-                        request = request.header(key.as_str(), value_str);
+                        if let Ok(value_str) = value.to_str() {
+                            request = request.header(key.as_str(), value_str);
                     }
                 }
             }
@@ -46,7 +48,13 @@ async fn handle_post(
             let response = request.send().await
                 .map_err(|err| {
                     let json = JsonResponse::error(&err.to_string());
-                    let mut response = Response::new(Body::from(serde_json::to_vec(&json).unwrap()));
+                    let error_response = serde_json::to_string(&json).unwrap();
+                    
+                    if state.verbose {
+                        eprintln!("*** {}", error_response);
+                    }
+                    
+                    let mut response = Response::new(Body::from(error_response));
                     *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
                     response.headers_mut().insert(header::SERVER, axum::http::HeaderValue::from_static("webot-relay"));
                     response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
@@ -54,8 +62,8 @@ async fn handle_post(
                 })?;
 
             if state.verbose {
-                eprintln!("Response Status: {}", response.status());
-                eprintln!("Response Headers:");
+                eprintln!("<<< {}", response.status());
+                eprintln!("<<< Response Headers:");
                 for (key, value) in response.headers() {
                     eprintln!("{}: {:?}", key, value);
                 }
@@ -64,7 +72,13 @@ async fn handle_post(
             let body = response.bytes().await
                 .map_err(|err| {
                     let json = JsonResponse::error(&err.to_string());
-                    let mut response = Response::new(Body::from(serde_json::to_vec(&json).unwrap()));
+                    let error_response = serde_json::to_string(&json).unwrap();
+                    
+                    if state.verbose {
+                        eprintln!("*** {}", error_response);
+                    }
+                    
+                    let mut response = Response::new(Body::from(error_response));
                     *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
                     response.headers_mut().insert(header::SERVER, axum::http::HeaderValue::from_static("webot-relay"));
                     response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
@@ -72,11 +86,13 @@ async fn handle_post(
                 })?;
 
             if state.verbose {
-                eprintln!("\nResponse Body:");
+                eprintln!("");
+                eprintln!("<<< Response Body:");
                 if let Ok(body_str) = String::from_utf8(body.to_vec()) {
                     eprintln!("{}", body_str);
                 } else {
                     eprintln!("Binary data: {} bytes", body.len());
+                    eprintln!("{:?}", body);
                 }
             }
 
@@ -95,10 +111,17 @@ async fn handle_post(
         },
         None => {
             let json = JsonResponse::url_not_configured();
+            let error_response = serde_json::to_string(&json).unwrap();
+            
+            if state.verbose {
+                eprintln!("*** {}", error_response);
+            }
+            
+            let mut response = Response::new(Body::from(error_response));
             *response.status_mut() = StatusCode::OK;
             response.headers_mut().insert(header::SERVER, axum::http::HeaderValue::from_static("webot-relay"));
             response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
-            Err((StatusCode::NOT_FOUND, response))
+            Err((StatusCode::OK, response))
         }
     }
 }

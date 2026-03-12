@@ -276,28 +276,42 @@ END IF
 
 IF url 已配置 THEN
     TRY
-        创建转发请求 (POST method, 原始headers, post_data)
+        移除请求头中的 Host 字段
+        创建转发请求 (POST method, 处理后的headers, post_data)
         发送请求到目标URL
         获取响应状态码和响应体
         
         如果启用了 verbose 模式:
-            记录响应状态码
-            记录所有响应头
-            记录响应体（如果是文本则显示内容，否则显示二进制数据大小）
+            记录响应状态码（格式：<<< 状态码）
+            记录所有响应头（格式：<<< Response Headers:）
+            记录响应体（格式：<<< Response Body:）
         
         发送响应状态码给客户端
         透传所有响应头给客户端
         发送响应体给客户端
     CATCH 异常
+        记录错误信息（格式：*** 错误信息）
         发送 500 状态码
         发送响应头 Server: webot-relay
         发送 JSON 错误响应 {"errcode": 1, "errmsg": "<错误信息>"}
+        发送 JSON 错误响应 {"errcode": 1, "errmsg": "Error relaying request: <错误信息>"}
     END TRY
 ELSE
+    记录错误信息（格式：*** 错误信息）
     发送 200 状态码
     发送响应头 Server: webot-relay
     发送 JSON 成功响应 {"errcode": 1, "errmsg": "URL not configured"}
+    发送 JSON 错误响应 {"errcode": 1, "errmsg": "URL not configured"}
 END IF
+
+### 4.2 日志格式
+
+- 请求头：以 ">>> Request Headers:" 开头
+- 请求体：以 ">>> Request Body:" 开头
+- 响应状态码：以 "<<< 状态码" 开头
+- 响应头：以 "<<< Response Headers:" 开头
+- 响应体：以 "<<< Response Body:" 开头
+- 错误信息：以 "*** 错误信息" 开头
 
 ### 4.3 地址解析规则
 
