@@ -112,9 +112,10 @@ def parse_bind_address(bind_addr: str) -> Tuple[str, int]:
         >>> parse_bind_address("")
         ('', 8000)
     """
+    default_host = ""
     default_port = 8000
     if not bind_addr:
-        return '', default_port
+        return default_host, default_port
 
     if bind_addr.startswith('[') and ']:' in bind_addr:
         # IPv6 address format: [::1]:8000
@@ -130,11 +131,11 @@ def parse_bind_address(bind_addr: str) -> Tuple[str, int]:
         if len(parts) == 2:
             return parts[0], int(parts[1])
         else:
-            return '', default_port
+            return default_host, default_port
     else:
         try:
             port = int(bind_addr)
-            return '', port
+            return default_host, port
         except ValueError:
             return bind_addr, default_port
 

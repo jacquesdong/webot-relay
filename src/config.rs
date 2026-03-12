@@ -2,21 +2,21 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 pub fn parse_bind_address(bind_addr: &str) -> Result<(String, u16), String> {
+    let default_host = "".to_string();
     let default_port = 8000;
 
     if bind_addr.is_empty() {
-        return Ok(("".to_string(), default_port));
+        return Ok((default_host.to_string(), default_port));
     }
 
     if bind_addr.starts_with('[') && bind_addr.contains("]:") {
-        // IPv6 address format: [::1]:8000
         let parts: Vec<&str> = bind_addr.splitn(2, "]:").collect();
         if parts.len() == 2 {
             let ipv6_addr = parts[0].trim_start_matches('[');
             let port: u16 = parts[1].parse().map_err(|_| "Invalid port number")?;
             return Ok((ipv6_addr.to_string(), port));
         } else {
-            return Ok(("".to_string(), default_port));
+            return Ok((default_host, default_port));
         }
     } else if bind_addr.contains(':') {
         let parts: Vec<&str> = bind_addr.rsplitn(2, ':').collect();
@@ -24,11 +24,11 @@ pub fn parse_bind_address(bind_addr: &str) -> Result<(String, u16), String> {
             let port: u16 = parts[0].parse().map_err(|_| "Invalid port number")?;
             return Ok((parts[1].to_string(), port));
         } else {
-            return Ok(("".to_string(), default_port));
+            return Ok((default_host, default_port));
         }
     } else {
         if let Ok(port) = bind_addr.parse::<u16>() {
-            return Ok(("".to_string(), port));
+            return Ok((default_host, port));
         } else {
             return Ok((bind_addr.to_string(), default_port));
         }
