@@ -94,12 +94,38 @@ class RelayHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 def parse_bind_address(bind_addr: str) -> Tuple[str, int]:
-    """Parse bind address string into host and port"""
+    """Parse bind address string into host and port
+    
+    Examples:
+        >>> parse_bind_address("[::1]:8000")
+        ('::1', 8000)
+        >>> parse_bind_address("[2001:db8::1]:9000")
+        ('2001:db8::1', 9000)
+        >>> parse_bind_address("[fe80::1%eth0]:8080")
+        ('fe80::1%eth0', 8080)
+        >>> parse_bind_address(":8000")
+        ('', 8000)
+        >>> parse_bind_address("127.0.0.1:8000")
+        ('127.0.0.1', 8000)
+        >>> parse_bind_address("8000")
+        ('', 8000)
+        >>> parse_bind_address("")
+        ('', 8000)
+    """
     default_port = 8000
     if not bind_addr:
         return '', default_port
 
-    if ':' in bind_addr:
+    if bind_addr.startswith('[') and ']:' in bind_addr:
+        # IPv6 address format: [::1]:8000
+        ipv6_part, port_part = bind_addr.split(']:', 1)
+        ipv6_addr = ipv6_part[1:]  # Remove '['
+        try:
+            port = int(port_part)
+            return ipv6_addr, port
+        except ValueError:
+            return bind_addr, default_port
+    elif ':' in bind_addr:
         parts = bind_addr.rsplit(':', 1)
         if len(parts) == 2:
             return parts[0], int(parts[1])

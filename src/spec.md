@@ -45,7 +45,7 @@
 
 | 参数 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
-| `-b`, `--bind` | 字符串 | 否 | `:8000` | 监听地址，格式为 `:端口` 或 `主机:端口` |
+| `-b`, `--bind` | 字符串 | 否 | `:8000` | 监听地址，格式为 `:端口`、`主机:端口` 或 `[IPv6地址]:端口` |
 | `--url` | 字符串 | 否 | - | 转发目标URL |
 | `-v`, `--verbose` | 标志 | 否 | false | 启用详细日志输出 |
 
@@ -59,8 +59,12 @@ python main.py
 python main.py --bind 8080
 python main.py --bind :8080
 
-# 指定主机和端口
+# 指定IPv4主机和端口
 python main.py --bind 127.0.0.1:9000
+
+# 指定IPv6地址和端口
+python main.py --bind [::1]:8000
+python main.py --bind [2001:db8::1]:9000
 
 # 转发到目标服务器
 python main.py --bind :8000 --url http://localhost:8001
@@ -236,7 +240,7 @@ struct JsonResponse {
 ```
 parse_bind_address(bind_addr: &str) -> (String, u16)
 
-输入: ":8000" 或 "localhost:8000" 或 "0.0.0.0:8000"
+输入: ":8000" 或 "localhost:8000" 或 "0.0.0.0:8000" 或 "[::1]:8000"
 
 IF bind_addr 为空 THEN
     RETURN ("", 8000)
@@ -244,6 +248,17 @@ END IF
 
 IF bind_addr 以 ':' 开头 THEN
     RETURN ("", bind_addr[1:].parse::<u16>())
+END IF
+
+IF bind_addr 以 '[' 开头且包含 ']:' THEN
+    提取 ']' 前的内容作为 IPv6 地址（去掉 '['）
+    提取 ']:' 后的内容作为端口号
+    TRY
+        port = 端口号.parse::<u16>()
+        RETURN (IPv6地址, port)
+    CATCH
+        RETURN (bind_addr, 8000)
+    END TRY
 END IF
 
 parts = bind_addr.rsplit(':', 1)
@@ -316,10 +331,36 @@ END IF
 ### 4.3 地址解析规则
 
 - 如果 bind_addr 为空，返回 ('', 8000)
+- 如果 bind_addr 以 ":" 开头，按第一个 ":" 分割，后半部分为 port，返回 ('', port)
+- 如果 bind_addr 以 "[" 开头且包含 "]:"，按 "]:" 分割，提取 IPv6 地址（去掉 "["）和端口号
 - 如果 bind_addr 包含 ":"，按最后一个 ":" 分割，前半部分为 host，后半部分为 port
 - 如果 bind_addr 不包含 ":"，尝试将其解析为端口号，如果成功则返回 ('', port)，否则返回 (bind_addr, 8000)
 
-### 4.4 服务器启动日志
+### 4.4 IPv6 地址支持
+
+#### IPv6 地址格式
+
+- 标准 IPv6 地址格式：`[2001:db8::1]:8000`
+- IPv6 本地环回地址：`[::1]:8000`
+- IPv6 链路本地地址：`[fe80::1%eth0]:8000`（包含接口标识符）
+
+#### IPv6 验证规则
+
+- 必须使用方括号 `[ ]` 包围 IPv6 地址
+- 端口号必须在 1-65535 范围内
+- 必须正确处理 IPv6 地址中的压缩表示（如 `::`）
+- 必须支持 IPv6 范围标识符（如 `%eth0`）
+
+#### 错误处理
+
+| 错误场景 | 处理方式 |
+|----------|----------|
+| 缺少 IPv6 地址的方括号 | 程序报错退出 |
+| 无效的 IPv6 地址格式 | 程序报错退出 |
+| 端口号超出范围 | 程序报错退出 |
+| 缺少端口号 | 使用默认端口 8000 |
+
+### 4.5 服务器启动日志
 
 - 格式："Server running on {host}:{port} [relay]"（如果配置了 URL）
 - 格式："Server running on {host}:{port} [dumb]"（如果未配置 URL）
