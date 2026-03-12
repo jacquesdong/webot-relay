@@ -6,8 +6,10 @@ mod server;
 use args::Args;
 use axum;
 use clap::Parser;
-use config::{parse_bind_address, parse_bind_address_to_socket_addr, validate_port};
+use config::parse_bind_address;
 use server::{AppState, create_app};
+use std::net::SocketAddr;
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
@@ -20,15 +22,12 @@ async fn main() {
         std::process::exit(1);
     });
 
-    validate_port(port).unwrap_or_else(|err| {
-        eprintln!("Error: {}", err);
+    let ip = std::net::IpAddr::from_str(&host).unwrap_or_else(|err| {
+        eprintln!("Invalid IP address: {}, {}", host, err);
         std::process::exit(1);
     });
 
-    let socket_addr = parse_bind_address_to_socket_addr(&args.bind).unwrap_or_else(|err| {
-        eprintln!("Error: {}", err);
-        std::process::exit(1);
-    });
+    let socket_addr = SocketAddr::new(ip, port);
 
     let url = args.get_url();
 
