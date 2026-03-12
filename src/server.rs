@@ -95,8 +95,7 @@ async fn handle_post(
         },
         None => {
             let json = JsonResponse::url_not_configured();
-            let mut response = Response::new(Body::from(serde_json::to_vec(&json).unwrap()));
-            *response.status_mut() = StatusCode::NOT_FOUND;
+            *response.status_mut() = StatusCode::OK;
             response.headers_mut().insert(header::SERVER, axum::http::HeaderValue::from_static("webot-relay"));
             response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
             Err((StatusCode::NOT_FOUND, response))
