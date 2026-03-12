@@ -1,9 +1,19 @@
-use axum::{routing::{post, any}, Router, http::StatusCode, extract::State, http::HeaderMap, body::Bytes, response::Response, body::Body, http::header};
 use crate::response::JsonResponse;
-use std::sync::Arc;
+use axum::{
+    Router,
+    body::Body,
+    body::Bytes,
+    extract::State,
+    http::HeaderMap,
+    http::StatusCode,
+    http::header,
+    response::Response,
+    routing::{any, post},
+};
+use chrono;
 use reqwest;
 use serde_json;
-use chrono;
+use std::sync::Arc;
 
 pub struct AppState {
     pub url: Option<String>,
@@ -34,8 +44,7 @@ async fn handle_post(
         Some(url) => {
             // 转发请求
             let client = reqwest::Client::new();
-            let mut request = client.post(url)
-                .body(body);
+            let mut request = client.post(url).body(body);
 
             // 透传请求头，移除 Host 字段
             for (key, value) in headers {
@@ -48,22 +57,30 @@ async fn handle_post(
                 }
             }
 
-            let response = request.send().await
-                .map_err(|err| {
-                    let json = JsonResponse::error(&err.to_string());
-                    let error_response = serde_json::to_string(&json).unwrap();
-                    
-                    if state.verbose {
-                        eprintln!("*** {}", error_response);
-                    }
-                    
-                    let mut response = Response::new(Body::from(error_response));
-                    *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
-                    response.headers_mut().insert(header::SERVER, axum::http::HeaderValue::from_static("webot-relay"));
-                    response.headers_mut().insert(header::DATE, axum::http::HeaderValue::from_str(&chrono::Utc::now().to_rfc2822()).unwrap());
-                    response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
-                    (StatusCode::INTERNAL_SERVER_ERROR, response)
-                })?;
+            let response = request.send().await.map_err(|err| {
+                let json = JsonResponse::error(&err.to_string());
+                let error_response = serde_json::to_string(&json).unwrap();
+
+                if state.verbose {
+                    eprintln!("*** {}", error_response);
+                }
+
+                let mut response = Response::new(Body::from(error_response));
+                *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+                response.headers_mut().insert(
+                    header::SERVER,
+                    axum::http::HeaderValue::from_static("webot-relay"),
+                );
+                response.headers_mut().insert(
+                    header::DATE,
+                    axum::http::HeaderValue::from_str(&chrono::Utc::now().to_rfc2822()).unwrap(),
+                );
+                response.headers_mut().insert(
+                    header::CONTENT_TYPE,
+                    axum::http::HeaderValue::from_static("application/json"),
+                );
+                (StatusCode::INTERNAL_SERVER_ERROR, response)
+            })?;
 
             if state.verbose {
                 eprintln!("<<< {}", response.status());
@@ -73,22 +90,30 @@ async fn handle_post(
                 }
             }
 
-            let body = response.bytes().await
-                .map_err(|err| {
-                    let json = JsonResponse::error(&err.to_string());
-                    let error_response = serde_json::to_string(&json).unwrap();
-                    
-                    if state.verbose {
-                        eprintln!("*** {}", error_response);
-                    }
-                    
-                    let mut response = Response::new(Body::from(error_response));
-                    *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
-                    response.headers_mut().insert(header::SERVER, axum::http::HeaderValue::from_static("webot-relay"));
-                    response.headers_mut().insert(header::DATE, axum::http::HeaderValue::from_str(&chrono::Utc::now().to_rfc2822()).unwrap());
-                    response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
-                    (StatusCode::INTERNAL_SERVER_ERROR, response)
-                })?;
+            let body = response.bytes().await.map_err(|err| {
+                let json = JsonResponse::error(&err.to_string());
+                let error_response = serde_json::to_string(&json).unwrap();
+
+                if state.verbose {
+                    eprintln!("*** {}", error_response);
+                }
+
+                let mut response = Response::new(Body::from(error_response));
+                *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+                response.headers_mut().insert(
+                    header::SERVER,
+                    axum::http::HeaderValue::from_static("webot-relay"),
+                );
+                response.headers_mut().insert(
+                    header::DATE,
+                    axum::http::HeaderValue::from_str(&chrono::Utc::now().to_rfc2822()).unwrap(),
+                );
+                response.headers_mut().insert(
+                    header::CONTENT_TYPE,
+                    axum::http::HeaderValue::from_static("application/json"),
+                );
+                (StatusCode::INTERNAL_SERVER_ERROR, response)
+            })?;
 
             if state.verbose {
                 eprintln!("");
@@ -104,29 +129,44 @@ async fn handle_post(
             if let Ok(json) = serde_json::from_slice::<serde_json::Value>(&body) {
                 let mut response = Response::new(Body::from(serde_json::to_vec(&json).unwrap()));
                 *response.status_mut() = StatusCode::OK;
-                response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
+                response.headers_mut().insert(
+                    header::CONTENT_TYPE,
+                    axum::http::HeaderValue::from_static("application/json"),
+                );
                 Ok(response)
             } else {
                 let json = JsonResponse::success();
                 let mut response = Response::new(Body::from(serde_json::to_vec(&json).unwrap()));
                 *response.status_mut() = StatusCode::OK;
-                response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
+                response.headers_mut().insert(
+                    header::CONTENT_TYPE,
+                    axum::http::HeaderValue::from_static("application/json"),
+                );
                 Ok(response)
             }
-        },
+        }
         None => {
             let json = JsonResponse::url_not_configured();
             let error_response = serde_json::to_string(&json).unwrap();
-            
+
             if state.verbose {
                 eprintln!("*** {}", error_response);
             }
-            
+
             let mut response = Response::new(Body::from(error_response));
             *response.status_mut() = StatusCode::OK;
-            response.headers_mut().insert(header::SERVER, axum::http::HeaderValue::from_static("webot-relay"));
-            response.headers_mut().insert(header::DATE, axum::http::HeaderValue::from_str(&chrono::Utc::now().to_rfc2822()).unwrap());
-            response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
+            response.headers_mut().insert(
+                header::SERVER,
+                axum::http::HeaderValue::from_static("webot-relay"),
+            );
+            response.headers_mut().insert(
+                header::DATE,
+                axum::http::HeaderValue::from_str(&chrono::Utc::now().to_rfc2822()).unwrap(),
+            );
+            response.headers_mut().insert(
+                header::CONTENT_TYPE,
+                axum::http::HeaderValue::from_static("application/json"),
+            );
             Err((StatusCode::OK, response))
         }
     }
@@ -136,8 +176,14 @@ async fn handle_method_not_allowed() -> Response {
     let json = JsonResponse::method_not_allowed();
     let mut response = Response::new(Body::from(serde_json::to_vec(&json).unwrap()));
     *response.status_mut() = StatusCode::METHOD_NOT_ALLOWED;
-    response.headers_mut().insert(header::SERVER, axum::http::HeaderValue::from_static("webot-relay"));
-    response.headers_mut().insert(header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
+    response.headers_mut().insert(
+        header::SERVER,
+        axum::http::HeaderValue::from_static("webot-relay"),
+    );
+    response.headers_mut().insert(
+        header::CONTENT_TYPE,
+        axum::http::HeaderValue::from_static("application/json"),
+    );
     response
 }
 

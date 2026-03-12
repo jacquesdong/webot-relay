@@ -4,7 +4,12 @@ use clap::Parser;
 #[command(name = "webot-relay")]
 #[command(about = "HTTP Relay Server - Forward POST requests to target URL", long_about = None)]
 pub struct Args {
-    #[arg(short, long, default_value = ":8000", help = "Address to bind to (e.g., :8000 or localhost:8000)")]
+    #[arg(
+        short,
+        long,
+        default_value = ":8000",
+        help = "Address to bind to (e.g., :8000 or localhost:8000)"
+    )]
     pub bind: String,
 
     #[arg(long, help = "URL to relay requests to")]

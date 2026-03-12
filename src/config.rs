@@ -3,24 +3,22 @@ use std::str::FromStr;
 
 pub fn parse_bind_address(bind_addr: &str) -> Result<(String, u16), String> {
     let default_port = 8000;
-    
+
     if bind_addr.is_empty() {
-        return Ok(("" .to_string(), default_port));
+        return Ok(("".to_string(), default_port));
     }
 
     if bind_addr.contains(':') {
         let parts: Vec<&str> = bind_addr.rsplitn(2, ':').collect();
         if parts.len() == 2 {
-            let port: u16 = parts[0]
-                .parse()
-                .map_err(|_| "Invalid port number")?;
+            let port: u16 = parts[0].parse().map_err(|_| "Invalid port number")?;
             return Ok((parts[1].to_string(), port));
         } else {
-            return Ok(("" .to_string(), default_port));
+            return Ok(("".to_string(), default_port));
         }
     } else {
         if let Ok(port) = bind_addr.parse::<u16>() {
-            return Ok(("" .to_string(), port));
+            return Ok(("".to_string(), port));
         } else {
             return Ok((bind_addr.to_string(), default_port));
         }
@@ -41,8 +39,7 @@ pub fn parse_bind_address_to_socket_addr(bind_addr: &str) -> Result<SocketAddr, 
     let ip = if host.is_empty() {
         "0.0.0.0".parse().unwrap()
     } else {
-        std::net::IpAddr::from_str(&host)
-            .map_err(|_| "Invalid IP address")?
+        std::net::IpAddr::from_str(&host).map_err(|_| "Invalid IP address")?
     };
 
     Ok(SocketAddr::new(ip, port))
