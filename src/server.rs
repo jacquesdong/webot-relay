@@ -15,6 +15,8 @@ use reqwest;
 use serde_json;
 use std::sync::Arc;
 
+const SERVER_NAME: &str = "webot-relay";
+
 pub struct AppState {
     pub url: Option<String>,
     pub verbose: bool,
@@ -69,7 +71,7 @@ async fn handle_post(
                 *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
                 response.headers_mut().insert(
                     header::SERVER,
-                    axum::http::HeaderValue::from_static("webot-relay"),
+                    axum::http::HeaderValue::from_static(SERVER_NAME),
                 );
                 response.headers_mut().insert(
                     header::DATE,
@@ -102,7 +104,7 @@ async fn handle_post(
                 *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
                 response.headers_mut().insert(
                     header::SERVER,
-                    axum::http::HeaderValue::from_static("webot-relay"),
+                    axum::http::HeaderValue::from_static(SERVER_NAME),
                 );
                 response.headers_mut().insert(
                     header::DATE,
@@ -157,7 +159,7 @@ async fn handle_post(
             *response.status_mut() = StatusCode::OK;
             response.headers_mut().insert(
                 header::SERVER,
-                axum::http::HeaderValue::from_static("webot-relay"),
+                axum::http::HeaderValue::from_static(SERVER_NAME),
             );
             response.headers_mut().insert(
                 header::DATE,
@@ -178,7 +180,7 @@ async fn handle_method_not_allowed() -> Response {
     *response.status_mut() = StatusCode::METHOD_NOT_ALLOWED;
     response.headers_mut().insert(
         header::SERVER,
-        axum::http::HeaderValue::from_static("webot-relay"),
+        axum::http::HeaderValue::from_static(SERVER_NAME),
     );
     response.headers_mut().insert(
         header::CONTENT_TYPE,
