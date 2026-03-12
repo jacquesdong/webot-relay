@@ -298,6 +298,12 @@ ELSE
     发送 JSON 成功响应 {"errcode": 1, "errmsg": "URL not configured"}
 END IF
 
+### 4.3 地址解析规则
+
+- 如果 bind_addr 为空，返回 ('', 8000)
+- 如果 bind_addr 包含 ":"，按最后一个 ":" 分割，前半部分为 host，后半部分为 port
+- 如果 bind_addr 不包含 ":"，尝试将其解析为端口号，如果成功则返回 ('', port)，否则返回 (bind_addr, 8000)
+
 ### 4.4 服务器启动日志
 
 - 格式："Server running on {host}:{port} [relay]"（如果配置了 URL）

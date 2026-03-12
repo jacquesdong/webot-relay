@@ -2,28 +2,29 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 pub fn parse_bind_address(bind_addr: &str) -> Result<(String, u16), String> {
+    let default_port = 8000;
+    
     if bind_addr.is_empty() {
-        return Ok(("".to_string(), 8000));
+        return Ok(("" .to_string(), default_port));
     }
 
-    if bind_addr.starts_with(':') {
-        let port_str = &bind_addr[1..];
-        let port: u16 = port_str
-            .parse()
-            .map_err(|_| "Invalid port number")?;
-        return Ok(("".to_string(), port));
-    }
-
-    if let Some(pos) = bind_addr.rfind(':') {
-        let host = &bind_addr[..pos];
-        let port_str = &bind_addr[pos + 1..];
-        
-        if let Ok(port) = port_str.parse::<u16>() {
-            return Ok((host.to_string(), port));
+    if bind_addr.contains(':') {
+        let parts: Vec<&str> = bind_addr.rsplitn(2, ':').collect();
+        if parts.len() == 2 {
+            let port: u16 = parts[0]
+                .parse()
+                .map_err(|_| "Invalid port number")?;
+            return Ok((parts[1].to_string(), port));
+        } else {
+            return Ok(("" .to_string(), default_port));
+        }
+    } else {
+        if let Ok(port) = bind_addr.parse::<u16>() {
+            return Ok(("" .to_string(), port));
+        } else {
+            return Ok((bind_addr.to_string(), default_port));
         }
     }
-
-    Ok((bind_addr.to_string(), 8000))
 }
 
 pub fn validate_port(port: u16) -> Result<(), String> {
