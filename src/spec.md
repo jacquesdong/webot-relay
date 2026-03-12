@@ -240,14 +240,14 @@ struct JsonResponse {
 ```
 parse_bind_address(bind_addr: &str) -> (String, u16)
 
-输入: ":8000" 或 "localhost:8000" 或 "0.0.0.0:8000" 或 "[::1]:8000"
+输入: ":8000" 或 "localhost:8000" 或 "0.0.0.0:8000" 或 "[::1]:8000" 或 "*:8000"
 
 IF bind_addr 为空 THEN
-    RETURN ("", 8000)
+    RETURN ("localhost", 8000)
 END IF
 
 IF bind_addr 以 ':' 开头 THEN
-    RETURN ("", bind_addr[1:].parse::<u16>())
+    RETURN ("0.0.0.0", bind_addr[1:].parse::<u16>())
 END IF
 
 IF bind_addr 以 '[' 开头且包含 ']:' THEN
@@ -264,6 +264,9 @@ END IF
 parts = bind_addr.rsplit(':', 1)
 IF parts.len() == 2 THEN
     host = parts[0]
+    IF host == '*' THEN
+        RETURN ("[::]", parts[1].parse::<u16>())
+    END IF
     TRY
         port = parts[1].parse::<u16>()
         RETURN (host, port)
@@ -272,7 +275,12 @@ IF parts.len() == 2 THEN
     END TRY
 END IF
 
-RETURN (bind_addr, 8000)
+TRY
+    port = bind_addr.parse::<u16>()
+    RETURN ("localhost", port)
+CATCH
+    RETURN (bind_addr, 8000)
+END TRY
 ```
 
 ### 4.3 请求处理算法

@@ -103,16 +103,18 @@ def parse_bind_address(bind_addr: str) -> Tuple[str, int]:
         ('2001:db8::1', 9000)
         >>> parse_bind_address("[fe80::1%eth0]:8080")
         ('fe80::1%eth0', 8080)
-        >>> parse_bind_address(":8000")
-        ('', 8000)
         >>> parse_bind_address("127.0.0.1:8000")
         ('127.0.0.1', 8000)
+        >>> parse_bind_address("*:8000")
+        ('[::]', 8000)
+        >>> parse_bind_address(":8000")
+        ('0.0.0.0', 8000)
         >>> parse_bind_address("8000")
-        ('', 8000)
+        ('localhost', 8000)
         >>> parse_bind_address("")
-        ('', 8000)
+        ('localhost', 8000)
     """
-    default_host = ""
+    default_host = "localhost"
     default_port = 8000
     if not bind_addr:
         return default_host, default_port
@@ -129,7 +131,12 @@ def parse_bind_address(bind_addr: str) -> Tuple[str, int]:
     elif ':' in bind_addr:
         parts = bind_addr.rsplit(':', 1)
         if len(parts) == 2:
-            return parts[0], int(parts[1])
+            host_part = parts[0]
+            if host_part == '*':
+                return '[::]', int(parts[1])
+            elif host_part == '':
+                return '0.0.0.0', int(parts[1])
+            return host_part, int(parts[1])
         else:
             return default_host, default_port
     else:
