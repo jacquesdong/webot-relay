@@ -57,7 +57,14 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_bind_port_only() {
+    fn test_parse_bind_port_number() {
+        let (host, port) = parse_bind_address("8080").unwrap();
+        assert_eq!(host, "");
+        assert_eq!(port, 8080);
+    }
+
+    #[test]
+    fn test_parse_bind_port_colon() {
         let (host, port) = parse_bind_address(":8080").unwrap();
         assert_eq!(host, "");
         assert_eq!(port, 8080);
