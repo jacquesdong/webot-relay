@@ -297,6 +297,11 @@ ELSE
     发送响应头 Server: webot-relay
     发送 JSON 成功响应 {"errcode": 1, "errmsg": "URL not configured"}
 END IF
+
+### 4.4 服务器启动日志
+
+- 格式："Server running on {host}:{port} [relay]"（如果配置了 URL）
+- 格式："Server running on {host}:{port} [dumb]"（如果未配置 URL）
 ```
 
 ---

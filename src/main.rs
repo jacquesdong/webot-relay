@@ -35,6 +35,8 @@ async fn main() {
     
     let url = args.get_url();
     
+    let is_relay = url.is_some();
+    
     let state = Arc::new(AppState {
         url,
         verbose: args.verbose,
@@ -48,7 +50,11 @@ async fn main() {
             std::process::exit(1);
         });
     
-    eprintln!("Server running on {:?}", socket_addr);
+    if is_relay {
+        eprintln!("Server running on {:?} [relay]", socket_addr);
+    } else {
+        eprintln!("Server running on {:?} [dumb]", socket_addr);
+    }
     
     axum::serve(listener, app).await
         .unwrap_or_else(|err| {
