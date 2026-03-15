@@ -10,8 +10,7 @@ use clap::{CommandFactory, Parser};
 use config::parse_bind_address;
 use server::{AppState, create_app};
 use service_manager::get_service_manager;
-use std::net::SocketAddr;
-use std::str::FromStr;
+use std::net::ToSocketAddrs;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
@@ -46,12 +45,14 @@ async fn handle_run_command(bind: String, url: Option<String>, verbose: bool) {
         std::process::exit(1);
     });
 
-    let ip = std::net::IpAddr::from_str(&host).unwrap_or_else(|err| {
-        eprintln!("Invalid IP address: {}, {}", host, err);
-        std::process::exit(1);
-    });
-
-    let socket_addr = SocketAddr::new(ip, port);
+    let socket_addr = format!("{}:{}", host, port)
+        .to_socket_addrs()
+        .unwrap_or_else(|err| {
+            eprintln!("Invalid address: {}, {}", bind, err);
+            std::process::exit(1);
+        })
+        .next()
+        .unwrap();
 
     let url = if url.is_some() {
         url

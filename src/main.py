@@ -160,7 +160,7 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
 Examples:
-  python main.py                                    # Listen on all interfaces, port 8000
+  python main.py                                    # Listen on localhost:8000
   python main.py --bind :8080                       # Listen on port 8080
   python main.py --bind 127.0.0.1:9000              # Listen on localhost:9000
   python main.py --bind :8000 --url http://example.com
@@ -168,7 +168,7 @@ Examples:
   WEBOT_URL=http://example.com python main.py --bind :8000
         '''
     )
-    parser.add_argument('-b', '--bind', default=':8000', help='Address to bind to (e.g., :8000 or localhost:8000)')
+    parser.add_argument('-b', '--bind', default='localhost:8000', help='Address to bind to (e.g., :8000 or localhost:8000)')
     parser.add_argument('--url', help='URL to relay requests to')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose logging')
 
@@ -186,12 +186,11 @@ Examples:
 
     server = HTTPServer((host, port), RelayHTTPRequestHandler)
 
-    if args.verbose:
-        sys.stderr.write("Server running on {}:{}".format(host or '0.0.0.0', port))
-        if url:
-            sys.stderr.write(" [relay]\n".format(url))
-        else:
-            sys.stderr.write(" [dumb]\n")
+    sys.stderr.write("Server running on {}:{}".format(host or '0.0.0.0', port))
+    if url:
+        sys.stderr.write(" [relay]\n".format(url))
+    else:
+        sys.stderr.write(" [dumb]\n")
 
     try:
         server.serve_forever()

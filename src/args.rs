@@ -29,7 +29,7 @@ pub enum Command {
         #[arg(
             short,
             long,
-            default_value = ":8000",
+            default_value = "localhost:8000",
             help = "Address to bind to (e.g., :8000 or localhost:8000) | 绑定地址（例如：:8000 或 localhost:8000）"
         )]
         bind: String,
@@ -50,7 +50,7 @@ pub enum ServiceCommand {
         #[arg(
             short,
             long,
-            default_value = ":8000",
+            default_value = "localhost:8000",
             help = "Address to bind to (e.g., :8000 or localhost:8000) | 绑定地址（例如：:8000 或 localhost:8000）"
         )]
         bind: String,
