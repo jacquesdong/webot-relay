@@ -1,43 +1,44 @@
 use clap::{Parser, Subcommand};
 
+use rust_i18n::t;
+
 #[derive(Parser, Debug)]
 #[command(
     name = "webot-relay",
     disable_version_flag = true,
     disable_help_subcommand = true
 )]
-#[command(about = "Webot Relay Server | 企业微信通知机器人转发服务", long_about = None)]
+#[command(about = t!("welcome.description").to_string(), long_about = None)]
 pub struct Args {
     #[command(subcommand)]
     pub command: Option<Command>,
 
-    #[arg(short, long, help = "Print version")]
+    #[arg(short, long, help = t!("options.version.description").to_string())]
     pub version: bool,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum Command {
-    /// Manage the relay server service | 服务管理命令（安装、启动、停止、状态、卸载）
-    #[command(disable_help_subcommand = true)]
+    #[command(disable_help_subcommand = true, about = t!("commands.service.description").to_string())]
     Service {
         #[command(subcommand)]
         command: ServiceCommand,
     },
 
-    /// Run the relay server instance | 直接在前台运行 HTTP 中继服务器
+    #[command(about = t!("commands.run.description").to_string())]
     Run {
         #[arg(
             short,
             long,
-            default_value = "localhost:8000",
-            help = "Address to bind to (e.g., :8000 or localhost:8000) | 绑定地址（例如：:8000 或 localhost:8000）"
+            default_value = ":8000",
+            help = t!("commands.run.bind.description").to_string()
         )]
         bind: String,
 
-        #[arg(long, help = "URL to relay requests to | 转发请求到的 URL")]
+        #[arg(long, help = t!("commands.run.url.description").to_string())]
         url: Option<String>,
 
-        #[arg(long, help = "Enable verbose logging | 启用详细日志")]
+        #[arg(long, help = t!("commands.run.verbose.description").to_string())]
         verbose: bool,
     },
 }
@@ -45,29 +46,29 @@ pub enum Command {
 #[derive(Subcommand, Debug)]
 #[command(disable_help_subcommand = true)]
 pub enum ServiceCommand {
-    /// 安装服务 | Install service
+    #[command(about = t!("commands.service.install.description").to_string())]
     Install {
         #[arg(
             short,
             long,
-            default_value = "localhost:8000",
-            help = "Address to bind to (e.g., :8000 or localhost:8000) | 绑定地址（例如：:8000 或 localhost:8000）"
+            default_value = ":8000",
+            help = t!("commands.run.bind.description").to_string()
         )]
         bind: String,
 
-        #[arg(long, help = "URL to relay requests to | 转发请求到的 URL")]
+        #[arg(long, help = t!("commands.run.url.description").to_string())]
         url: Option<String>,
 
-        #[arg(short, long, help = "Enable verbose logging | 启用详细日志")]
+        #[arg(short, long, help = t!("commands.run.verbose.description").to_string())]
         verbose: bool,
     },
-    /// 启动服务 | Start service
+    #[command(about = t!("commands.service.start.description").to_string())]
     Start,
-    /// 停止服务 | Stop service
+    #[command(about = t!("commands.service.stop.description").to_string())]
     Stop,
-    /// 查看服务 | Check service status
+    #[command(about = t!("commands.service.status.description").to_string())]
     Status,
-    /// 卸载服务 | Uninstall service
+    #[command(about = t!("commands.service.uninstall.description").to_string())]
     Uninstall,
 }
 

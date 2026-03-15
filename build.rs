@@ -24,9 +24,9 @@ fn main() {
     println!("cargo:rustc-env=BUILD_VERSION={}", build_version);
 
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=.git/HEAD");
-    println!("cargo:rerun-if-changed=.git/refs/heads/");
+    println!("cargo:rerun-if-changed=.git/index");
+    println!("cargo:rerun-if-changed=locales");
 }
 
 fn git_commit_date() -> Option<String> {
