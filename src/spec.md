@@ -47,7 +47,7 @@
 |------|------|------|--------|------|
 | `-b`, `--bind` | 字符串 | 否 | `:8000` | 监听地址，格式为 `:端口`、`主机:端口` 或 `[IPv6地址]:端口` |
 | `--url` | 字符串 | 否 | - | 转发目标URL |
-| `-v`, `--verbose` | 标志 | 否 | false | 启用详细日志输出 |
+| `--verbose` | 标志 | 否 | false | 启用详细日志输出 |
 
 #### 使用示例
 
@@ -70,7 +70,7 @@ python main.py --bind [2001:db8::1]:9000
 python main.py --bind :8000 --url http://localhost:8001
 
 # 启用详细日志
-python main.py --bind :8000 -v --url http://example.com
+python main.py --bind :8000 --verbose --url http://example.com
 
 # 使用环境变量配置URL
 export WEBOT_URL=http://localhost:8001
@@ -176,7 +176,7 @@ struct JsonResponse {
                       │
                       ▼
 ┌─────────────────────────────────────────────────────────┐
-│           解析命令行参数 (-b, --bind, --url, -v)        │
+│           解析命令行参数 (-b, --bind, --url, --verbose)   │
 └─────────────────────┬───────────────────────────────────┘
                       │
                       ▼
@@ -494,7 +494,7 @@ src/
 | `python main.py --bind :8000` | 启动在8000端口 |
 | `python main.py --bind :8080 --url http://example.com` | 转发请求到example.com |
 | `WEBOT_URL=http://test.com python main.py` | 使用环境变量的URL |
-| `python main.py --bind :8000 -v` | 打印详细日志 |
+| `python main.py --bind :8000 --verbose` | 打印详细日志 |
 | 发送POST请求带JSON body | 正确转发/打印 |
 
 ### 8.2 功能测试 (Rust)
@@ -504,7 +504,7 @@ src/
 | `cargo run -- --bind :8000` | 启动在8000端口 |
 | `cargo run -- --bind :8080 --url http://example.com` | 转发请求到example.com |
 | `WEBOT_URL=http://test.com cargo run -- --bind :8000` | 使用环境变量的URL |
-| `cargo run -- --bind :8000 -v` | 打印详细日志 |
+| `cargo run -- --bind :8000 --verbose` | 打印详细日志 |
 | 发送POST请求带JSON body | 正确转发/打印 |
 
 #### Rust 单元测试

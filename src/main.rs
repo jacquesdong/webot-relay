@@ -17,6 +17,11 @@ use tokio::net::TcpListener;
 async fn main() {
     let args = Args::parse();
 
+    if args.version {
+        println!("webot-relay {}", args.get_version());
+        std::process::exit(0);
+    }
+
     let (host, port) = parse_bind_address(&args.bind).unwrap_or_else(|err| {
         eprintln!("Error parsing address: {}", err);
         std::process::exit(1);

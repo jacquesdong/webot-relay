@@ -1,8 +1,8 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[command(name = "webot-relay")]
-#[command(version = env!("BUILD_VERSION"), about = "HTTP Relay Server - Forward POST requests to target URL", long_about = None)]
+#[command(name = "webot-relay", disable_version_flag = true)]
+#[command(about = "HTTP Relay Server - Forward POST requests to target URL", long_about = None)]
 pub struct Args {
     #[arg(
         short,
@@ -15,8 +15,11 @@ pub struct Args {
     #[arg(long, help = "URL to relay requests to")]
     pub url: Option<String>,
 
-    #[arg(short, long, help = "Enable verbose logging")]
+    #[arg(long, help = "Enable verbose logging")]
     pub verbose: bool,
+
+    #[arg(short, long, help = "Print version")]
+    pub version: bool,
 }
 
 impl Args {
@@ -26,6 +29,10 @@ impl Args {
         } else {
             std::env::var("WEBOT_URL").ok()
         }
+    }
+
+    pub fn get_version(&self) -> &'static str {
+        env!("BUILD_VERSION")
     }
 }
 
@@ -46,8 +53,15 @@ mod tests {
     }
 
     #[test]
+    fn test_version_flag() {
+        let args = Args::parse_from(&["webot-relay", "--version"]);
+        assert!(args.version);
+        assert_eq!(args.get_version(), env!("BUILD_VERSION"));
+    }
+
+    #[test]
     fn test_verbose_flag() {
-        let args = Args::parse_from(&["webot-relay", "-v"]);
+        let args = Args::parse_from(&["webot-relay", "--verbose"]);
         assert!(args.verbose);
     }
 
