@@ -2,7 +2,7 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(name = "webot-relay")]
-#[command(about = "HTTP Relay Server - Forward POST requests to target URL", long_about = None)]
+#[command(version = env!("BUILD_VERSION"), about = "HTTP Relay Server - Forward POST requests to target URL", long_about = None)]
 pub struct Args {
     #[arg(
         short,
