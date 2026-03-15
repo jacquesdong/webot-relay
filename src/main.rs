@@ -2,14 +2,14 @@ mod args;
 mod config;
 mod response;
 mod server;
-mod service_manager;
+mod service;
 
 use args::{Args, Command, ServiceCommand};
 use axum;
 use clap::{CommandFactory, Parser};
 use config::parse_bind_address;
 use server::{AppState, create_app};
-use service_manager::get_service_manager;
+use service::get_service_manager;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
 use tokio::net::TcpListener;

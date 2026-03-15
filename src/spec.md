@@ -499,7 +499,7 @@ src/
 ├── handler.rs        # HTTP请求处理器
 ├── relay.rs          # 请求转发逻辑
 ├── response.rs       # JSON响应构建
-└── service_manager/  # 服务管理相关代码
+└── service           # 服务管理相关代码
     ├── mod.rs        # 服务管理模块入口
     ├── linux.rs      # Linux服务管理实现
     ├── windows.rs    # Windows服务管理实现

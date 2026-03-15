@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::process::Command;
 
-use crate::service_manager::{ServiceError, ServiceManager};
+use crate::service::{ServiceError, ServiceManager};
 
 /// Windows 服务管理器，使用 sc 命令管理服务
 pub struct WindowsServiceManager;

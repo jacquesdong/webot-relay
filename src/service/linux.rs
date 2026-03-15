@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Write;
 use std::process::Command;
 
-use crate::service_manager::{ServiceError, ServiceManager};
+use crate::service::{ServiceError, ServiceManager};
 
 /// Linux 服务管理器，使用 systemd 管理服务
 pub struct LinuxServiceManager;
