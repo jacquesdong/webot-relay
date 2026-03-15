@@ -48,6 +48,14 @@
 | `-b`, `--bind` | 字符串 | 否 | `:8000` | 监听地址，格式为 `:端口`、`主机:端口` 或 `[IPv6地址]:端口` |
 | `--url` | 字符串 | 否 | - | 转发目标URL |
 | `--verbose` | 标志 | 否 | false | 启用详细日志输出 |
+| `-v`, `--version` | 标志 | 否 | false | 显示版本信息并退出（仅 Rust 版本支持） |
+| `run` | 子命令 | 否 | - | 前台运行（仅 Rust 版本支持） |
+| `service` | 子命令 | 否 | - | 服务管理命令（仅 Rust 版本支持） |
+| `service` `install` | 子命令 | 否 | - | 安装服务（仅 Rust 版本支持） |
+| `service` `start` | 子命令 | 否 | - | 启动服务（仅 Rust 版本支持） |
+| `service` `stop` | 子命令 | 否 | - | 停止服务（仅 Rust 版本支持） |
+| `service` `status` | 子命令 | 否 | - | 查看服务状态（仅 Rust 版本支持） |
+| `service` `uninstall` | 子命令 | 否 | - | 卸载服务（仅 Rust 版本支持） |
 
 #### 使用示例
 
@@ -75,6 +83,29 @@ python main.py --bind :8000 --verbose --url http://example.com
 # 使用环境变量配置URL
 export WEBOT_URL=http://localhost:8001
 python main.py --bind :8000
+
+# 查看版本信息（仅 Rust 版本支持）
+./webot-relay --version
+./webot-relay -v
+
+# 前台运行（仅 Rust 版本支持）
+./webot-relay run --bind :8000 --verbose --url http://example.com
+
+# 服务管理命令（仅 Rust 版本支持）
+# 安装服务（假设启动参数为 --bind :8000 --url http://example.com）
+sudo ./webot-relay service install --bind :8000 --url http://example.com
+
+# 启动服务
+sudo ./webot-relay service start
+
+# 停止服务
+sudo ./webot-relay service stop
+
+# 查看服务状态
+sudo ./webot-relay service status
+
+# 卸载服务
+sudo ./webot-relay service uninstall
 ```
 
 ### 2.2 环境变量
@@ -211,7 +242,7 @@ struct JsonResponse {
                是          否
                 │           │
                 ▼           ▼
-        打印请求信息    不打印
+        显示请求信息    不显示
                 │           │
                 └───────────┘
                       │
@@ -463,10 +494,16 @@ clap = { version = "4", features = ["derive"] }      # 命令行解析
 ```
 src/
 ├── main.rs           # 入口点，命令行解析和服务器启动
+├── args.rs           # 命令行参数定义
 ├── config.rs         # 配置结构体定义
 ├── handler.rs        # HTTP请求处理器
 ├── relay.rs          # 请求转发逻辑
-└── response.rs       # JSON响应构建
+├── response.rs       # JSON响应构建
+└── service_manager/  # 服务管理相关代码
+    ├── mod.rs        # 服务管理模块入口
+    ├── linux.rs      # Linux服务管理实现
+    ├── windows.rs    # Windows服务管理实现
+    └── macos.rs      # macOS服务管理实现
 ```
 
 ### 7.3 性能要求
@@ -494,7 +531,7 @@ src/
 | `python main.py --bind :8000` | 启动在8000端口 |
 | `python main.py --bind :8080 --url http://example.com` | 转发请求到example.com |
 | `WEBOT_URL=http://test.com python main.py` | 使用环境变量的URL |
-| `python main.py --bind :8000 --verbose` | 打印详细日志 |
+| `python main.py --bind :8000 --verbose` | 显示详细日志 |
 | 发送POST请求带JSON body | 正确转发/打印 |
 
 ### 8.2 功能测试 (Rust)
@@ -506,6 +543,11 @@ src/
 | `WEBOT_URL=http://test.com cargo run -- --bind :8000` | 使用环境变量的URL |
 | `cargo run -- --bind :8000 --verbose` | 打印详细日志 |
 | 发送POST请求带JSON body | 正确转发/打印 |
+| `sudo cargo run -- service install --bind :8000 --url http://example.com` | 安装服务 |
+| `sudo cargo run -- service start` | 启动服务 |
+| `sudo cargo run -- service stop` | 停止服务 |
+| `sudo cargo run -- service status` | 查看服务状态 |
+| `sudo cargo run -- service uninstall` | 卸载服务 |
 
 #### Rust 单元测试
 
