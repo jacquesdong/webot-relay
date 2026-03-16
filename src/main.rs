@@ -1,8 +1,8 @@
-use rust_i18n::{i18n, t};
-i18n!("locales", fallback = "en");
+rust_i18n::i18n!("locales", fallback = "en");
 
 mod args;
 mod config;
+mod i18n;
 mod response;
 mod server;
 mod service;
@@ -47,14 +47,14 @@ async fn main() {
 
 async fn handle_run_command(bind: String, url: Option<String>, verbose: bool) {
     let (host, port) = parse_bind_address(&bind).unwrap_or_else(|err| {
-        eprintln!("{}", t!("errors.parsing_address", error = err));
+        eprintln!("{}", i18n::errors::parsing_address(&err.to_string()));
         std::process::exit(1);
     });
 
     let socket_addr = format!("{}:{}", host, port)
         .to_socket_addrs()
         .unwrap_or_else(|err| {
-            eprintln!("{}", t!("errors.invalid_ip", host = bind, error = err));
+            eprintln!("{}", i18n::errors::invalid_ip(&bind, &err.to_string()));
             std::process::exit(1);
         })
         .next()
@@ -73,24 +73,24 @@ async fn handle_run_command(bind: String, url: Option<String>, verbose: bool) {
     let app = create_app(state);
 
     let listener = TcpListener::bind(socket_addr).await.unwrap_or_else(|err| {
-        eprintln!("{}", t!("errors.binding_address", error = err));
+        eprintln!("{}", i18n::errors::binding_address(&err.to_string()));
         std::process::exit(1);
     });
 
     if is_relay {
         eprintln!(
             "{}",
-            t!("messages.server_running_relay", address = socket_addr)
+            i18n::messages::server_running_relay(&socket_addr.to_string())
         );
     } else {
         eprintln!(
             "{}",
-            t!("messages.server_running_dumb", address = socket_addr)
+            i18n::messages::server_running_dumb(&socket_addr.to_string())
         );
     }
 
     axum::serve(listener, app).await.unwrap_or_else(|err| {
-        eprintln!("{}", t!("errors.starting_server", error = err));
+        eprintln!("{}", i18n::errors::starting_server(&err.to_string()));
         std::process::exit(1);
     });
 }
@@ -112,25 +112,25 @@ fn handle_service_command(cmd: ServiceCommand) {
             let args_str = args.join(" ");
 
             match service_manager.install(&args_str) {
-                Ok(_) => println!("{}", t!("messages.service_installed")),
-                Err(e) => eprintln!("{}", t!("errors.installing_service", error = e)),
+                Ok(_) => println!("{}", i18n::messages::service_installed()),
+                Err(e) => eprintln!("{}", i18n::errors::installing_service(&e.to_string())),
             }
         }
         ServiceCommand::Start => match service_manager.start() {
-            Ok(_) => println!("{}", t!("messages.service_started")),
-            Err(e) => eprintln!("{}", t!("errors.starting_service", error = e)),
+            Ok(_) => println!("{}", i18n::messages::service_started()),
+            Err(e) => eprintln!("{}", i18n::errors::starting_service(&e.to_string())),
         },
         ServiceCommand::Stop => match service_manager.stop() {
-            Ok(_) => println!("{}", t!("messages.service_stopped")),
-            Err(e) => eprintln!("{}", t!("errors.stopping_service", error = e)),
+            Ok(_) => println!("{}", i18n::messages::service_stopped()),
+            Err(e) => eprintln!("{}", i18n::errors::stopping_service(&e.to_string())),
         },
         ServiceCommand::Status => match service_manager.status() {
             Ok(status) => println!("{}", status),
-            Err(e) => eprintln!("{}", t!("errors.getting_status", error = e)),
+            Err(e) => eprintln!("{}", i18n::errors::getting_status(&e.to_string())),
         },
         ServiceCommand::Uninstall => match service_manager.uninstall() {
-            Ok(_) => println!("{}", t!("messages.service_uninstalled")),
-            Err(e) => eprintln!("{}", t!("errors.uninstalling_service", error = e)),
+            Ok(_) => println!("{}", i18n::messages::service_uninstalled()),
+            Err(e) => eprintln!("{}", i18n::errors::uninstalling_service(&e.to_string())),
         },
     }
 }

@@ -4,9 +4,6 @@ welcome:
   description:
     en: "Webot Relay Server"
     zh-CN: "企业微信通知转发服务"
-  long_description:
-    en: "WxWork notification robot forwarding service"
-    zh-CN: "企业微信通知机器人消息转发服务"
 
 commands:
   service:
