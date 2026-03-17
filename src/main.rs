@@ -8,7 +8,6 @@ mod server;
 mod service;
 
 use args::{Args, Command, ServiceCommand};
-use axum;
 use clap::{CommandFactory, Parser};
 use config::parse_bind_address;
 use server::{AppState, create_app};
