@@ -1,63 +1,62 @@
 _version: 2
 
-welcome:
-  description:
+args:
+  about:
     en: "Webot Relay Server"
     zh-CN: "企业微信通知转发服务"
 
-commands:
-  service:
-    description:
-      en: "Manage relay server service"
-      zh-CN: "服务管理命令（安装、启动、停止、状态、卸载）"
-    install:
-      description:
-        en: "Install service"
-        zh-CN: "安装服务"
-    start:
-      description:
-        en: "Start service"
-        zh-CN: "启动服务"
-    stop:
-      description:
-        en: "Stop service"
-        zh-CN: "停止服务"
-    status:
-      description:
-        en: "Check service status"
-        zh-CN: "查看服务"
-    uninstall:
-      description:
-        en: "Uninstall service"
-        zh-CN: "卸载服务"
-  run:
-    description:
-      en: "Run relay server instance"
-      zh-CN: "直接在前台运行 HTTP 中继服务器"
-    bind:
-      description:
-        en: "Address to bind to (e.g., :8000 or localhost:8000)"
-        zh-CN: "绑定地址（例如：:8000 或 localhost:8000）"
-    url:
-      description:
-        en: "URL to relay requests to"
-        zh-CN: "转发请求到的 URL"
-    verbose:
-      description:
-        en: "Enable verbose logging"
-        zh-CN: "启用详细日志"
-
-options:
   version:
-    description:
+    help:
       en: "Print version"
       zh-CN: "显示版本信息"
+
+  commands:
+    service:
+      about:
+        en: "Manage relay server service"
+        zh-CN: "服务管理命令（安装、启动、停止、状态、卸载）"
+      install:
+        about:
+          en: "Install service"
+          zh-CN: "安装服务"
+      start:
+        about:
+          en: "Start service"
+          zh-CN: "启动服务"
+      stop:
+        about:
+          en: "Stop service"
+          zh-CN: "停止服务"
+      status:
+        about:
+          en: "Check service status"
+          zh-CN: "查看服务"
+      uninstall:
+        about:
+          en: "Uninstall service"
+          zh-CN: "卸载服务"
+    run:
+      about:
+        en: "Run relay server instance"
+        zh-CN: "直接在前台运行 HTTP 中继服务器"
+      bind:
+        help:
+          en: "Address to bind to (e.g., :8000 or localhost:8000)"
+          zh-CN: "绑定地址（例如：:8000 或 localhost:8000）"
+      url:
+        help:
+          en: "URL to relay requests to"
+          zh-CN: "转发请求到的 URL"
+      verbose:
+        help:
+          en: "Enable verbose logging"
+          zh-CN: "启用详细日志"
 
 errors:
   parsing_address:
     en: "Error parsing address: %{error}"
     zh-CN: "地址解析错误: %{error}"
-  invalid_ip:
+  invalid_address:
     en: "Invalid IP address: %{host}, %{error}"
     zh-CN: "无效的 IP 地址: %{host}, %{error}"
   binding_address:

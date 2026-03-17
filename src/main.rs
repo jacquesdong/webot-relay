@@ -53,7 +53,7 @@ async fn handle_run_command(bind: String, url: Option<String>, verbose: bool) {
     let socket_addr = format!("{}:{}", host, port)
         .to_socket_addrs()
         .unwrap_or_else(|err| {
-            eprintln!("{}", i18n::errors::invalid_ip(&bind, &err.to_string()));
+            eprintln!("{}", i18n::errors::invalid_address(&bind, &err.to_string()));
             std::process::exit(1);
         })
         .next()

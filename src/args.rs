@@ -8,37 +8,37 @@ use crate::i18n;
     disable_version_flag = true,
     disable_help_subcommand = true
 )]
-#[command(about = i18n::welcome::description().to_string(), long_about = None)]
+#[command(about = i18n::args::about().to_string(), long_about = None)]
 pub struct Args {
     #[command(subcommand)]
     pub command: Option<Command>,
 
-    #[arg(short, long, help = i18n::options::version::description().to_string())]
+    #[arg(short, long, help = i18n::args::version::help().to_string())]
     pub version: bool,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum Command {
-    #[command(disable_help_subcommand = true, about = i18n::commands::service::description().to_string())]
+    #[command(disable_help_subcommand = true, about = i18n::args::commands::service::about().to_string())]
     Service {
         #[command(subcommand)]
         command: ServiceCommand,
     },
 
-    #[command(about = i18n::commands::run::description().to_string())]
+    #[command(about = i18n::args::commands::run::about().to_string())]
     Run {
         #[arg(
             short,
             long,
             default_value = ":8000",
-            help = i18n::commands::run::bind::description().to_string()
+            help = i18n::args::commands::run::bind::help().to_string()
         )]
         bind: String,
 
-        #[arg(long, help = i18n::commands::run::url::description().to_string())]
+        #[arg(long, help = i18n::args::commands::run::url::help().to_string())]
         url: Option<String>,
 
-        #[arg(long, help = i18n::commands::run::verbose::description().to_string())]
+        #[arg(long, help = i18n::args::commands::run::verbose::help().to_string())]
         verbose: bool,
     },
 }
@@ -46,29 +46,29 @@ pub enum Command {
 #[derive(Subcommand, Debug)]
 #[command(disable_help_subcommand = true)]
 pub enum ServiceCommand {
-    #[command(about = i18n::commands::service::install::description().to_string())]
+    #[command(about = i18n::args::commands::service::install::about().to_string())]
     Install {
         #[arg(
             short,
             long,
             default_value = ":8000",
-            help = i18n::commands::run::bind::description().to_string()
+            help = i18n::args::commands::run::bind::help().to_string()
         )]
         bind: String,
 
-        #[arg(long, help = i18n::commands::run::url::description().to_string())]
+        #[arg(long, help = i18n::args::commands::run::url::help().to_string())]
         url: Option<String>,
 
-        #[arg(short, long, help = i18n::commands::run::verbose::description().to_string())]
+        #[arg(short, long, help = i18n::args::commands::run::verbose::help().to_string())]
         verbose: bool,
     },
-    #[command(about = i18n::commands::service::start::description().to_string())]
+    #[command(about = i18n::args::commands::service::start::about().to_string())]
     Start,
-    #[command(about = i18n::commands::service::stop::description().to_string())]
+    #[command(about = i18n::args::commands::service::stop::about().to_string())]
     Stop,
-    #[command(about = i18n::commands::service::status::description().to_string())]
+    #[command(about = i18n::args::commands::service::status::about().to_string())]
     Status,
-    #[command(about = i18n::commands::service::uninstall::description().to_string())]
+    #[command(about = i18n::args::commands::service::uninstall::about().to_string())]
     Uninstall,
 }
 

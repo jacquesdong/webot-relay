@@ -355,7 +355,7 @@ pub mod messages {
 | 翻译键 | 模块路径 | 函数名 |
 |--------|----------|--------|
 | `welcome.description` | `welcome::description()` | `i18n::welcome::description()` |
-| `commands.service.install.description` | `commands::service::install_description()` | `i18n::commands::service::install_description()` |
+| `commands.service.install.description` | `commands::service::install_description()` | `i18n::args::commands::service::install_description()` |
 | `errors.parsing_address` | `errors::parsing_address(error: &str)` | `i18n::errors::parsing_address("error")` |
 | `messages.server_running_relay` | `messages::server_running_relay(address: &str)` | `i18n::messages::server_running_relay("addr")` |
 
@@ -482,15 +482,15 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Command {
-    #[command(about = i18n::commands::service::description().to_string())]
+    #[command(about = i18n::args::commands::service::description().to_string())]
     Service {
         #[command(subcommand)]
         command: ServiceCommand,
     },
 
-    #[command(about = i18n::commands::run::description().to_string())]
+    #[command(about = i18n::args::commands::run::description().to_string())]
     Run {
-        #[arg(help = i18n::commands::run::bind_description().to_string())]
+        #[arg(help = i18n::args::commands::run::bind_description().to_string())]
         bind: String,
     },
 }
@@ -504,7 +504,7 @@ pub enum Command {
 ```rust
 // ✅ 多个模块可以有同名函数
 i18n::welcome::description()
-i18n::commands::description()
+i18n::args::commands::description()
 i18n::errors::description()
 
 // ❌ 扁平函数名需要避免冲突
@@ -518,10 +518,10 @@ errors_description()
 **对比：**
 ```rust
 // 扁平函数名
-i18n::commands_service_install_description()
+i18n::args::commands_service_install_description()
 
 // 模块路径
-i18n::commands::service::install_description()
+i18n::args::commands::service::install_description()
 ```
 
 ### 3. 类型安全
