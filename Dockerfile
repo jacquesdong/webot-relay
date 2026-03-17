@@ -8,6 +8,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     libssl-dev \
     curl \
     git \
+    apt-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Rust
