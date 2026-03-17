@@ -33,7 +33,7 @@ async fn handle_post(
         for (key, value) in &headers {
             eprintln!("{}: {:?}", key, value);
         }
-        eprintln!("");
+        eprintln!();
         eprintln!(">>> Request Body:");
         if let Ok(body_str) = String::from_utf8(body.to_vec()) {
             eprintln!("{}", body_str);
@@ -119,7 +119,7 @@ async fn handle_post(
             })?;
 
             if state.verbose {
-                eprintln!("");
+                eprintln!();
                 eprintln!("<<< Response Body:");
                 if let Ok(body_str) = String::from_utf8(body.to_vec()) {
                     eprintln!("{}", body_str);
