@@ -1,0 +1,16 @@
+# Ignore target directory
+target/
+
+# Ignore other unnecessary files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Ignore git files
+.git/
+.gitignore
+
+# Ignore IDE files
+.vscode/
+.idea/
