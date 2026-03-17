@@ -11,28 +11,29 @@ pub fn parse_bind_address(bind_addr: &str) -> Result<(String, u16), String> {
         if parts.len() == 2 {
             let ipv6_addr = parts[0].trim_start_matches('[');
             let port: u16 = parts[1].parse().map_err(|_| "Invalid port number")?;
-            return Ok((ipv6_addr.to_string(), port));
+            Ok((ipv6_addr.to_string(), port))
         } else {
-            return Ok((default_host.to_string(), default_port));
+            Ok((default_host.to_string(), default_port))
         }
     } else if let Some(port_str) = bind_addr.strip_prefix(':') {
         let port: u16 = port_str.parse().map_err(|_| "Invalid port number")?;
-        return Ok(("0.0.0.0".to_string(), port));
+        Ok(("0.0.0.0".to_string(), port))
     } else if bind_addr.contains(':') {
         let parts: Vec<&str> = bind_addr.rsplitn(2, ':').collect();
         if parts.len() == 2 {
             let host_part = parts[1];
             let port: u16 = parts[0].parse().map_err(|_| "Invalid port number")?;
             if host_part == "*" {
-                return Ok(("[::]".to_string(), port));
+                Ok(("[::]".to_string(), port))
+            } else {
+                Ok((host_part.to_string(), port))
             }
-            return Ok((host_part.to_string(), port));
         } else {
-            return Ok((default_host.to_string(), default_port));
+            Ok((default_host.to_string(), default_port))
         }
     } else {
         let port = bind_addr.parse().map_err(|_| "Invalid port number")?;
-        return Ok((default_host.to_string(), port));
+        Ok((default_host.to_string(), port))
     }
 }
 
