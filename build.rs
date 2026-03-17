@@ -102,16 +102,16 @@ fn extract_translations(
                 };
 
                 if let serde_yaml::Value::Mapping(inner_map) = value {
-                    if inner_map.contains_key(&serde_yaml::Value::String("en".to_string())) {
+                    if inner_map.contains_key(serde_yaml::Value::String("en".to_string())) {
                         // This is a translation entry
                         let en_text = inner_map
-                            .get(&serde_yaml::Value::String("en".to_string()))
+                            .get(serde_yaml::Value::String("en".to_string()))
                             .and_then(|v| v.as_str())
                             .unwrap_or("")
                             .to_string();
 
                         let zh_text = inner_map
-                            .get(&serde_yaml::Value::String("zh-CN".to_string()))
+                            .get(serde_yaml::Value::String("zh-CN".to_string()))
                             .and_then(|v| v.as_str())
                             .unwrap_or("")
                             .to_string();
