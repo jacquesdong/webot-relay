@@ -25,9 +25,9 @@ fn main() {
     let dirty = is_git_dirty();
     if dirty {
         build_version.push('+');
-
-        println!("cargo:warning=version: {}", build_version);
     }
+
+    println!("cargo:warning=Build version: {}", build_version);
 
     println!("cargo:rustc-env=BUILD_VERSION={}", build_version);
 
@@ -44,22 +44,22 @@ fn generate_i18n_module() -> Result<(), Box<dyn std::error::Error>> {
 fn generate_i18n_module_from_file(locales_path: &str, dest_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     // Read locales file
     let locales_content = fs::read_to_string(locales_path)?;
-    
+
     // Parse YAML
     let yaml: serde_yaml::Value = serde_yaml::from_str(&locales_content)?;
-    
+
     // Extract translation entries
     let mut entries = Vec::new();
     extract_translations(&yaml, "", &mut entries);
-    
+
     // Generate i18n code
     let code = generate_i18n_code(&entries, locales_path);
-    
+
     // Write to file
     let out_dir = env::var("CARGO_MANIFEST_DIR")?;
     let dest_full_path = std::path::Path::new(&out_dir).join(dest_path);
     fs::write(&dest_full_path, code)?;
-    
+
     println!("cargo:warning=Generated i18n module with {} translations", entries.len());
     Ok(())
 }
@@ -80,13 +80,13 @@ fn extract_translations(yaml: &serde_yaml::Value, prefix: &str, entries: &mut Ve
                 if key_str.starts_with('_') {
                     continue; // Skip special keys like _version
                 }
-                
+
                 let full_key = if prefix.is_empty() {
                     key_str.clone()
                 } else {
                     format!("{}.{}", prefix, key_str)
                 };
-                
+
                 if let serde_yaml::Value::Mapping(inner_map) = value {
                     if inner_map.contains_key(&serde_yaml::Value::String("en".to_string())) {
                         // This is a translation entry
@@ -94,20 +94,20 @@ fn extract_translations(yaml: &serde_yaml::Value, prefix: &str, entries: &mut Ve
                             .and_then(|v| v.as_str())
                             .unwrap_or("")
                             .to_string();
-                        
+
                         let zh_text = inner_map.get(&serde_yaml::Value::String("zh-CN".to_string()))
                             .and_then(|v| v.as_str())
                             .unwrap_or("")
                             .to_string();
-                        
+
                         // Extract parameters
                         let params = extract_parameters(&en_text);
-                        
+
                         // Determine module path and function name
                         let parts: Vec<&str> = full_key.split('.').collect();
                         let module_path = parts[0..parts.len()-1].join(".");
                         let function_name = parts.last().unwrap().to_string();
-                        
+
                         entries.push(TranslationEntry {
                             key: full_key,
                             module_path,
@@ -129,25 +129,25 @@ fn extract_translations(yaml: &serde_yaml::Value, prefix: &str, entries: &mut Ve
 fn extract_parameters(text: &str) -> Vec<String> {
     let mut params = Vec::new();
     let mut chars = text.chars();
-    
+
     while let Some(c) = chars.next() {
         if c == '%' && chars.as_str().starts_with('{') {
             chars.next(); // Consume '{'
             let mut param = String::new();
-            
+
             while let Some(c) = chars.next() {
                 if c == '}' {
                     break;
                 }
                 param.push(c);
             }
-            
+
             if !param.is_empty() {
                 params.push(param);
             }
         }
     }
-    
+
     params
 }
 
@@ -169,7 +169,7 @@ impl ModuleNode {
 
 fn build_module_tree(entries: &[TranslationEntry]) -> ModuleNode {
     let mut root = ModuleNode::new("".to_string());
-    
+
     for entry in entries {
         if entry.module_path.is_empty() {
             // Root level function
@@ -184,13 +184,13 @@ fn build_module_tree(entries: &[TranslationEntry]) -> ModuleNode {
         } else {
             let parts: Vec<&str> = entry.module_path.split('.').collect();
             let mut current = &mut root;
-            
+
             for part in parts {
                 current = current.children
                     .entry(part.to_string())
                     .or_insert_with(|| ModuleNode::new(part.to_string()));
             }
-            
+
             current.functions.push(TranslationEntry {
                 key: entry.key.clone(),
                 module_path: entry.module_path.clone(),
@@ -201,69 +201,69 @@ fn build_module_tree(entries: &[TranslationEntry]) -> ModuleNode {
             });
         }
     }
-    
+
     root
 }
 
 fn generate_i18n_code(entries: &[TranslationEntry], locales_path: &str) -> String {
     let mut code = String::new();
-    
+
     // File header
     code.push_str("// Auto-generated by build.rs - DO NOT EDIT\n");
     code.push_str(&format!("// This file is generated from {}\n\n", locales_path));
-    
+
     // Build module tree
     let root = build_module_tree(entries);
-    
+
     // Generate code from module tree
     for (_name, child) in &root.children {
         code.push_str(&generate_module_from_node(child, ""));
     }
-    
+
     // Generate root level functions
     for func in &root.functions {
         code.push_str(&generate_function(func, ""));
     }
-    
+
     code
 }
 
 fn generate_module_from_node(node: &ModuleNode, indent: &str) -> String {
     let mut code = String::new();
-    
+
     code.push_str(&format!("{}pub mod {} {{\n", indent, node.name));
-    
+
     let child_indent = format!("{}    ", indent);
-    
+
     // Import t! macro only if this module has functions
     if !node.functions.is_empty() {
         code.push_str(&format!("{}    use rust_i18n::t;\n\n", indent));
     }
-    
+
     // Generate functions
     for func in &node.functions {
         code.push_str(&generate_function(func, &child_indent));
     }
-    
+
     // Generate children
     for child in node.children.values() {
         code.push_str(&generate_module_from_node(child, &child_indent));
     }
-    
+
     code.push_str(&format!("{}}}\n\n", indent));
-    
+
     code
 }
 
 fn generate_function(entry: &TranslationEntry, indent: &str) -> String {
     let mut code = String::new();
-    
+
     // Function documentation
     code.push_str(&format!("{}/// Get translation for \"{}\"\n", indent, entry.key));
     code.push_str(&format!("{}/// \n", indent));
     code.push_str(&format!("{}/// English: \"{}\"\n", indent, entry.en_text));
     code.push_str(&format!("{}/// Chinese: \"{}\"\n", indent, entry.zh_text));
-    
+
     if !entry.params.is_empty() {
         code.push_str(&format!("{}/// \n", indent));
         code.push_str(&format!("{}/// # Parameters\n", indent));
@@ -271,7 +271,7 @@ fn generate_function(entry: &TranslationEntry, indent: &str) -> String {
             code.push_str(&format!("{}/// - `{}`: Parameter\n", indent, param));
         }
     }
-    
+
     // Function signature
     if entry.params.is_empty() {
         // No parameters
@@ -286,12 +286,12 @@ fn generate_function(entry: &TranslationEntry, indent: &str) -> String {
         let args: Vec<String> = entry.params.iter()
             .map(|p| format!("{} = {}", p, p))
             .collect();
-        
+
         code.push_str(&format!("{}pub fn {}({}) -> String {{\n", indent, entry.function_name, params.join(", ")));
         code.push_str(&format!("{}    t!(\"{}\", {}).to_string()\n", indent, entry.key, args.join(", ")));
         code.push_str(&format!("{}}}\n\n", indent));
     }
-    
+
     code
 }
 
