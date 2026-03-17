@@ -15,8 +15,8 @@ pub fn parse_bind_address(bind_addr: &str) -> Result<(String, u16), String> {
         } else {
             return Ok((default_host.to_string(), default_port));
         }
-    } else if bind_addr.starts_with(':') {
-        let port: u16 = bind_addr[1..].parse().map_err(|_| "Invalid port number")?;
+    } else if let Some(port_str) = bind_addr.strip_prefix(':') {
+        let port: u16 = port_str.parse().map_err(|_| "Invalid port number")?;
         return Ok(("0.0.0.0".to_string(), port));
     } else if bind_addr.contains(':') {
         let parts: Vec<&str> = bind_addr.rsplitn(2, ':').collect();
