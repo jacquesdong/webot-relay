@@ -236,7 +236,7 @@ fn generate_i18n_code(entries: &[TranslationEntry], locales_path: &str) -> Strin
     let root = build_module_tree(entries);
 
     // Generate code from module tree
-    for (_name, child) in &root.children {
+    for child in root.children.values() {
         code.push_str(&generate_module_from_node(child, ""));
     }
 
