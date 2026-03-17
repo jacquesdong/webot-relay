@@ -151,7 +151,7 @@ fn extract_parameters(text: &str) -> Vec<String> {
             chars.next(); // Consume '{'
             let mut param = String::new();
 
-            while let Some(c) = chars.next() {
+            for c in chars.by_ref() {
                 if c == '}' {
                     break;
                 }
