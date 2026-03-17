@@ -10,6 +10,11 @@ fn main() {
         std::process::exit(1);
     }
 
+    // Generate build version
+    generate_build_version();
+}
+
+fn generate_build_version() {
     let mut build_version = env!("CARGO_PKG_VERSION").to_string();
 
     if let Some(date) = git_commit_date() {
